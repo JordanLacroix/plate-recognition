@@ -20,13 +20,15 @@ Une seule valeur confirmée par véhicule — jamais de sortie frame-par-frame.*
 
 | Document | Contenu |
 |----------|---------|
+| **[🛠️ Installation](docs/INSTALLATION.md)** | Procédure complète pas à pas, vérification, dépannage |
+| **[🧪 Guide de test](docs/GUIDE_TEST.md)** | 3 niveaux de test : unitaire → démo vidéo → pipeline réel |
 | **[🧱 Architecture](docs/ARCHITECTURE.md)** | Briques fonctionnelles & techniques, carte des modules, portabilité |
 | **[🔀 Pipeline & Workflow](docs/PIPELINE.md)** | Le flux frame → événement, étape par étape. La logique de confirmation en détail |
 | **[⚠️ Problématiques & solutions](docs/PROBLEMATIQUES.md)** | Les 9 problèmes durs de l'ANPR et comment ils sont traités (avec preuves) |
 | **[🎯 Risques restants](docs/RISQUES.md)** | Dette, inconnues, blocages, points RGPD/sécurité à traiter |
 | **[✅ Roadmap & TODO](docs/ROADMAP.md)** | Jalons POC → production → Jetson, avec cases à cocher |
 
-> 💡 Nouveau sur le projet ? Lis dans l'ordre : **Architecture → Pipeline → Problématiques**.
+> 💡 Nouveau sur le projet ? **[Installe](docs/INSTALLATION.md)**, puis **[teste](docs/GUIDE_TEST.md)**, puis lis **Architecture → Pipeline → Problématiques**.
 
 ---
 

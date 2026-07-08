@@ -7,10 +7,11 @@ license = { text = "MIT" }
 
 # Contrainte dure: MIT / Apache-2.0 uniquement. Aucun AGPL (pas Ultralytics), aucun poids NC.
 dependencies = [
-    "numpy>=1.26,<2.1",
-    "opencv-python-headless>=4.9,<5",   # Apache-2.0
-    "supervision>=0.22,<0.24",          # MIT — ByteTrack + LineZone/PolygonZone
-    "paddleocr>=2.8,<3",                # Apache-2.0 — PP-OCRv5 reco
+    "numpy>=1.26,<3",
+    "opencv-python-headless>=4.9,<6",   # Apache-2.0
+    "supervision>=0.24,<0.30",          # MIT — ByteTrack + LineZone. <0.30: ByteTrack retiré en 0.30 (cf. RISQUES R9)
+    "paddleocr>=3,<4",                  # Apache-2.0 — PP-OCRv5/v6 reco
+    "paddlepaddle>=3,<4",               # Apache-2.0 — backend requis par paddleocr (wheels aarch64 différents sur Jetson)
     "onnxruntime>=1.18,<2",             # MIT — CoreML EP sur M1
     "pyyaml>=6,<7",
     "pydantic>=2.7,<3",
