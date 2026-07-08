@@ -1,0 +1,6 @@
+# Seuils confirmation — jamais en dur dans le code.
+conf_min: 0.6            # gate qualité: min char confidence par lecture
+k_consensus: 3          # lectures concordantes requises avant émission (debounce)
+det_conf_min: 0.4       # seuil confiance détecteur plaque
+euroband_strip_frac: 0.11  # fraction gauche croppée (euroband bleu + pays + étoiles)
+dedup_window_sec: 5.0   # même plaque ré-émise sur un autre tracker_id dans cette fenêtre -> supprimée

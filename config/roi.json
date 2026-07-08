@@ -1,0 +1,6 @@
+{
+  "_comment": "ROI + ligne de franchissement en coords pixel. Calibrer sur la vue fixe réelle.",
+  "polygon": [[100, 300], [1180, 300], [1180, 700], [100, 700]],
+  "line_start": [100, 500],
+  "line_end": [1180, 500]
+}

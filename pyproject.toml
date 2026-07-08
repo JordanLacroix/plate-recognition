@@ -1,0 +1,45 @@
+[project]
+name = "anpr-poc"
+version = "0.1.0"
+description = "POC ANPR camions — vue fixe, plaques UE. Backend-agnostic (MPS/CPU/ONNX-CoreML), portage Jetson TensorRT prévu."
+requires-python = ">=3.10"
+license = { text = "MIT" }
+
+# Contrainte dure: MIT / Apache-2.0 uniquement. Aucun AGPL (pas Ultralytics), aucun poids NC.
+dependencies = [
+    "numpy>=1.26,<2.1",
+    "opencv-python-headless>=4.9,<5",   # Apache-2.0
+    "supervision>=0.22,<0.24",          # MIT — ByteTrack + LineZone/PolygonZone
+    "paddleocr>=2.8,<3",                # Apache-2.0 — PP-OCRv5 reco
+    "onnxruntime>=1.18,<2",             # MIT — CoreML EP sur M1
+    "pyyaml>=6,<7",
+    "pydantic>=2.7,<3",
+]
+
+[project.optional-dependencies]
+# Détecteur torch — MPS sur M1. Poids LibreYOLO (MIT) ou RF-DETR base/S (Apache-2.0) fournis hors repo.
+torch = [
+    "torch>=2.3,<2.6",
+    "torchvision>=0.18,<0.21",
+]
+dev = [
+    "pytest>=8,<9",
+    "ruff>=0.5,<1",
+    "mypy>=1.10,<2",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["anpr_poc"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+ignore_missing_imports = true

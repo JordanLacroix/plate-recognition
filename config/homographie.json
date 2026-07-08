@@ -1,0 +1,8 @@
+{
+  "_comment": "Homographie 3x3 pré-calibrée UNE fois (vue fixe) pour warper le crop plaque en quasi fronto-parallèle avant OCR. Identité = pas de redressement. Recalibrer avec eval/calibrate_homography.py.",
+  "matrix": [
+    [1.0, 0.0, 0.0],
+    [0.0, 1.0, 0.0],
+    [0.0, 0.0, 1.0]
+  ]
+}

@@ -1,0 +1,27 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# Modèles / poids (fournis hors repo — licences vérifiées à l'ajout)
+*.pt
+*.onnx
+*.engine
+weights/
+
+# Données POC (clips réels lourds — voir data/README)
+data/clips/
+data/crops/
+!data/**/.gitkeep
+
+# Sorties runtime
+out/
+*.log
+snapshots/
