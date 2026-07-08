@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 from pathlib import Path
 
 import cv2
@@ -59,7 +60,7 @@ def ocr_boxes(ocr, frame: np.ndarray, conf_min: float):
         x1, y1, x2, y2 = (float(v) for v in np.asarray(b).reshape(-1)[:4])
         xyxy.append([x1, y1, x2, y2])
         sc.append(s)
-        tx.append("".join(str(t).split()).upper())
+        tx.append(re.sub(r"[^A-Z0-9]", "", str(t).upper()))  # canonique (cf. paddle_reco)
     if not xyxy:
         return np.zeros((0, 4), np.float32), np.zeros((0,), np.float32), []
     return np.asarray(xyxy, np.float32), np.asarray(sc, np.float32), tx

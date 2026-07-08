@@ -24,15 +24,20 @@ flowchart LR
 ## ✅ Jalon 0 — Squelette + cœur *(terminé)*
 
 - [x] Structure de dépôt backend-agnostic, config injectée
-- [x] Cœur confirmation : buffer/tracker_id, gate, vote char pondéré, debounce
+- [x] Cœur confirmation : buffer/tracker_id, gate, vote, debounce
 - [x] Validation format par pays (FR/GB/DE/ES/IT/NL/BE/PL) + strict-when-known
-- [x] Anti-doublon inter-tracks (fenêtre configurable)
+- [x] Plaques canoniques (alphanumérique) → vote robuste aux séparateurs
+- [x] Anti-doublon inter-tracks par **distance d'édition** (fenêtre configurable)
+- [x] Gate optionnel de **franchissement de ligne** (`require_line_crossing`)
+- [x] **Purge mémoire** des buffers de tracks disparus (`retain`)
 - [x] Tracking multi-plaque (supervision ByteTrack + LineZone)
-- [x] OCR PP-OCRv5 intégré + `rectify()` + `euroband_strip()`
+- [x] OCR PP-OCRv5/v6 **API 3.x** + `rectify()` + `euroband_strip()`
+- [x] **`StubDetector`** → pipeline réel `anpr_poc.run` end-to-end (sans modèle entraîné)
 - [x] Sinks événements (jsonl / log / multi)
 - [x] Harnais eval (CER + FP/FN)
 - [x] Export ONNX (chemin Jetson)
-- [x] 11 tests unitaires du cœur (verts)
+- [x] **18 tests** : cœur (`test_confirm`) + intégration (`test_pipeline`)
+- [x] **CI** GitHub Actions : tests + contrôle de licences (aucune AGPL)
 - [x] Démo bootstrap + rendu vidéo annoté
 - [x] Documentation complète (ce dossier `docs/`)
 
@@ -85,7 +90,9 @@ flowchart LR
 
 ### Conformité (à cadrer tôt)
 - [ ] **RGPD** : base légale, information, durée de conservation, minimisation, DPIA si requise ([R5](RISQUES.md#r5--conformité-rgpd))
-- [ ] CI **contrôle de licences** (`pip-licenses`, échec si AGPL) ([R12](RISQUES.md#r12--contrôle-de-licences-non-automatisé))
+- [x] CI **contrôle de licences** (`pip-licenses`, échec si AGPL) ([R12](RISQUES.md#r12--contrôle-de-licences-non-automatisé))
+- [ ] Durcir le contrôle : échouer aussi sur `UNKNOWN`, trancher les 2 deps LGPL ([R14](RISQUES.md#r14--deux-dépendances-lgpl--une-licence-unknown))
+- [ ] Câbler le **routage par pays** (OCR lettre euroband → `Read.country`) ([R13](RISQUES.md#r13--routage-par-pays-non-câblé))
 
 ---
 

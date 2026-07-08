@@ -46,7 +46,7 @@ Les problèmes durs de l'ANPR et **comment ils sont traités ici** — avec les 
 **Solution — défense en profondeur, 4 couches :**
 1. **Gate de confiance** — rejette toute lecture avec un caractère sous `CONF_MIN`.
 2. **Validation de format par pays** — une lecture qui ne respecte pas le gabarit du pays est écartée du vote (pas juste « pénalisée »).
-3. **Vote pondéré par confiance** — les caractères sûrs pèsent plus.
+3. **Vote pondéré par confiance** — les caractères sûrs pèsent plus. ⚠️ *Aujourd'hui la confiance par caractère est le score-ligne répliqué* → le vote dégénère en majorité simple ; vrai par-caractère = travail CTC à venir ([R2](RISQUES.md#r2--confidences-ocr-par-caractère-approximées)).
 4. **K-consensus** — il faut plusieurs frames d'accord.
 
 **Choix explicite : pas de VLM/LLM dans la boucle.** Un LLM « corrigerait » une plaque en une plaque plausible mais fausse. On préfère un vote arithmétique déterministe et traçable.
@@ -72,7 +72,7 @@ Garde-fous en place :
 - Rappel licence directement dans le code du wrapper détecteur ([`detect/libreyolo.py`](../anpr_poc/detect/libreyolo.py)).
 - Règle projet : *vérifier le graphe de dépendances à chaque ajout de package ; aucune AGPL ne doit entrer.*
 
-📌 **À ajouter** (voir [Roadmap](ROADMAP.md)) : un contrôle automatique de licences en CI (`pip-licenses`) pour rendre la contrainte *exécutable* et non seulement documentaire.
+✅ **Fait** : contrôle automatique en CI — [`scripts/check_licenses.sh`](../scripts/check_licenses.sh) + [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) échouent sur toute AGPL / GPL fort. L'audit actuel ne trouve **aucune AGPL**. Nuance honnête : 2 deps **LGPL** transitives (`crc32c`, `python-bidi`) et 1 licence `UNKNOWN` (`aistudio-sdk`) subsistent — cf. [Risques § R14](RISQUES.md#r14--deux-dépendances-lgpl--une-licence-unknown).
 
 ---
 
@@ -115,9 +115,9 @@ Passage Mac → Jetson = changer l'exécuteur, pas la logique. Détail : [Archit
 
 **Problème.** Un même véhicule peut recevoir **plusieurs `tracker_id`** (occlusion, changement d'apparence, mouvement rapide) → plusieurs événements pour une seule plaque.
 
-**Solution.** Anti-doublon inter-tracks dans `ConfirmBuffer` : une plaque déjà émise dans `dedup_window_sec` supprime les ré-émissions, même sur un `tracker_id` différent.
+**Solution.** Anti-doublon inter-tracks dans `ConfirmBuffer` : une plaque déjà émise dans `dedup_window_sec` supprime les ré-émissions, même sur un `tracker_id` différent. La comparaison se fait **à distance d'édition ≤ `dedup_edit_distance`** (1 par défaut) → attrape aussi les quasi-doublons dus au bruit OCR (`GX521EW` vs `GX521EV`), pas seulement les chaînes identiques.
 
-**Preuve.** Avant correctif : clip Volvo → **2 événements** (`GX-521-E` sur le track #1, `GX-521-EW` sur le track #3). Après correctif (dédup + validation stricte qui rejette le partiel) : **1 seul événement** `GX-521-EW`, conf 0.99. Verrouillé par 2 tests (`test_dedup_*`).
+**Preuve.** Avant correctif : clip Volvo → **2 événements** (`GX521E` partiel sur track #1, `GX521EW` sur track #3). Après correctif (dédup + validation stricte qui rejette le partiel) : **1 seul événement** `GX521EW`, conf 0.99. Verrouillé par 4 tests (`test_dedup_*`).
 
 ---
 

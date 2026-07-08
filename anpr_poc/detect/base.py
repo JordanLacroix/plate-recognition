@@ -22,7 +22,8 @@ class Detector(Protocol):
 def load_detector(weights: str | Path, backend: str = "auto") -> Detector:
     """Fabrique. Choisit le backend selon l'extension ou `backend` explicite.
 
-    backend: "auto" | "torch" | "onnx" | "tensorrt"
+    backend: "auto" | "stub" | "torch" | "onnx" | "tensorrt"
+    - stub  -> StubDetector (boîte fixe, aucun modèle — pipeline end-to-end/tests)
     - .pt   -> torch (MPS/CPU sur M1)
     - .onnx -> onnxruntime (CoreML EP sur M1)
     - .engine -> TensorRT (Jetson; pas implémenté sur Mac)
@@ -33,6 +34,10 @@ def load_detector(weights: str | Path, backend: str = "auto") -> Detector:
             weights.suffix, "onnx"
         )
 
+    if backend == "stub":
+        from anpr_poc.detect.stub import StubDetector
+
+        return StubDetector()
     if backend == "torch":
         from anpr_poc.detect.libreyolo import TorchDetector
 

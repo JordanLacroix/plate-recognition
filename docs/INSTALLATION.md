@@ -185,11 +185,23 @@ python -m pytest tests/ -q
 </details>
 
 <details>
-<summary><b>Note : wrapper OCR <code>ocr/paddle_reco.py</code> et API PaddleOCR 3.x</b></summary>
+<summary><b>Vérifier le contrôle de licences en local</b></summary>
 
-Le wrapper « officiel » [`ocr/paddle_reco.py`](../anpr_poc/ocr/paddle_reco.py) vise l'API
-PP-OCRv5 (2.x). La démo bootstrap, elle, utilise l'API 3.x (`predict`, `use_doc_unwarping=False`)
-et sert de référence à jour. Aligner le wrapper sur 3.x est une tâche de [Roadmap](ROADMAP.md).
+```bash
+pip install pip-licenses
+bash scripts/check_licenses.sh    # échoue si AGPL / GPL fort ; tolère LGPL documentées
+```
+Même contrôle qu'en CI ([`.github/workflows/ci.yml`](../.github/workflows/ci.yml)).
+</details>
+
+<details>
+<summary><b>Faire tourner le vrai pipeline sans détecteur entraîné</b></summary>
+
+Backend `stub` (détecteur factice + OCR réel) → `anpr_poc.run` s'exécute end-to-end :
+```bash
+python -m anpr_poc.run data/clips/mon_clip.mp4 --backend stub --out out/events.jsonl
+```
+Détail : [Guide de test § Niveau 3a](GUIDE_TEST.md#3a-avec-le-détecteur-factice-tourne-aujourdhui).
 </details>
 
 ---

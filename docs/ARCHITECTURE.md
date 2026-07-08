@@ -82,6 +82,7 @@ flowchart TB
         BASE[base.py<br/>Detector Protocol + load_detector]
         TORCH[libreyolo.py<br/>TorchDetector MPS]
         ONNX[onnx_detector.py<br/>OnnxDetector CoreML]
+        STUB[stub.py<br/>StubDetector — pipeline sans modèle]
         EXP[export.py<br/>.pt → .onnx]
     end
     subgraph track["track/"]
@@ -106,7 +107,7 @@ flowchart TB
     BUF --> VAL & VOTE
     BUF --> SNK
     CFG -.injecté.-> PIPE
-    BASE --> TORCH & ONNX
+    BASE --> TORCH & ONNX & STUB
 
     style confirm fill:#fff6db,stroke:#d98b00
 ```
@@ -119,7 +120,9 @@ Le fichier [`pipeline.py`](../anpr_poc/pipeline.py) est le seul point qui conna�
 
 1. **Backend-agnostic dès le premier jour.** Le détecteur est un `Protocol` ([`detect/base.py`](../anpr_poc/detect/base.py)). `load_detector(weights, backend="auto")` choisit `torch` / `onnx` / `tensorrt` selon l'extension. Aucune ligne Mac-only dans le chemin d'inférence → le portage Jetson ne touche que le backend.
 
-2. **Sans état global.** `ConfirmBuffer`, `PlateTracker` sont instanciés par run. L'eval crée un tracker neuf par clip → aucune fuite d'état entre clips.
+2. **Sans état global, mémoire bornée.** `ConfirmBuffer`, `PlateTracker` sont instanciés par run. L'eval crée un tracker neuf par clip → aucune fuite d'état entre clips. Sur flux long, `ConfirmBuffer.retain(active_ids)` purge à chaque frame les buffers des tracks disparus (pas de fuite mémoire RTSP 24/7).
+
+   Un backend **`stub`** (`load_detector(..., backend="stub")`) permet de faire tourner tout le pipeline **sans modèle entraîné** — utile pour l'intégration et les tests bout-en-bout.
 
 3. **Config injectée, zéro seuil en dur.** `CONF_MIN`, `K_CONSENSUS`, ROI, homographie, regex par pays, fenêtre de dédup → tous dans [`config/`](../config), chargés via pydantic. Changer un seuil = éditer un YAML, pas le code.
 

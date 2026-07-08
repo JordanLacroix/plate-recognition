@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  tests:
+    name: Tests (cœur + intégration)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install (léger — fakes, pas de modèle)
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy pydantic pyyaml "opencv-python-headless>=4.9,<6" pytest
+      - name: Pytest
+        run: python -m pytest tests/ -q
+
+  licenses:
+    name: Contrôle de licences (aucune AGPL)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install projet complet
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+          pip install pip-licenses
+      - name: Échec si AGPL / GPL fort dans l'arbre de dépendances
+        run: bash scripts/check_licenses.sh

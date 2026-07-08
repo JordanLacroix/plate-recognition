@@ -4,3 +4,5 @@ k_consensus: 3          # lectures concordantes requises avant émission (deboun
 det_conf_min: 0.4       # seuil confiance détecteur plaque
 euroband_strip_frac: 0.11  # fraction gauche croppée (euroband bleu + pays + étoiles)
 dedup_window_sec: 5.0   # même plaque ré-émise sur un autre tracker_id dans cette fenêtre -> supprimée
+dedup_edit_distance: 1  # distance d'édition max pour considérer 2 plaques comme doublon (0 = exact)
+require_line_crossing: false  # si true, n'émet que pour un track ayant franchi la ligne LineZone

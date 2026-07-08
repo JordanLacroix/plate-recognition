@@ -38,6 +38,8 @@ class Pipeline:
             k_consensus=t.k_consensus,
             default_country=self.config.formats.default_country,
             dedup_window_sec=t.dedup_window_sec,
+            dedup_edit_distance=t.dedup_edit_distance,
+            require_crossing=t.require_line_crossing,
         )
         self._H = self.config.homography_matrix
         self._strip = t.euroband_strip_frac
@@ -52,6 +54,9 @@ class Pipeline:
             detections = self.detector.detect(frame, self._det_conf)
             tracks = self.tracker.update(detections)
 
+            # purge mémoire: buffers des tracks disparus (flux long / RTSP 24-7)
+            self._confirm.retain({tid for tid, _, _ in tracks})
+
             for tracker_id, bbox, crossed in tracks:
                 if self._confirm.already_emitted(tracker_id):
                     continue
@@ -62,7 +67,7 @@ class Pipeline:
                 if read is None:
                     continue
 
-                event = self._confirm.add(tracker_id, read, timestamp=ts)
+                event = self._confirm.add(tracker_id, read, timestamp=ts, crossed=crossed)
                 if event is not None:
                     self.sink.emit(event)
                     events.append(event)

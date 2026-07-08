@@ -1,16 +1,17 @@
 # Validation format = dict pays -> regex. PAS un regex UE unique.
-# POC: FR strict + fallback structurel souple + vote.
+# Plaques CANONIQUES: alphanumérique seul (séparateurs retirés au normalize).
+# Les regex n'ont donc pas de tiret/point/espace. POC: pays strict + fallback souple + vote.
 default_country: FR
 
-# Fallback souple si pays inconnu ou regex pays échoue au bootstrap.
-fallback_regex: '^[A-Z0-9]{5,8}$'
+# Fallback souple si pays inconnu (plaque canonique, 5 à 10 chars).
+fallback_regex: '^[A-Z0-9]{5,10}$'
 
 regex_by_country:
-  FR: '^[A-Z]{2}-\d{3}-[A-Z]{2}$'        # SIV: AA-123-AA
-  DE: '^[A-Z]{1,3}-[A-Z]{1,2}\d{1,4}$'   # ex. B-MW1234 (simplifié)
-  ES: '^\d{4}-[A-Z]{3}$'                  # 1234-BCD
+  FR: '^[A-Z]{2}\d{3}[A-Z]{2}$'          # SIV: AA123AA (affiché AA-123-AA)
+  DE: '^[A-Z]{1,3}[A-Z]{1,2}\d{1,4}$'    # ex. BMW1234 (simplifié)
+  ES: '^\d{4}[A-Z]{3}$'                  # 1234BCD
   IT: '^[A-Z]{2}\d{3}[A-Z]{2}$'          # AB123CD
   NL: '^[A-Z0-9]{6}$'                     # simplifié (formats multiples)
-  BE: '^[12]-[A-Z]{3}-\d{3}$'            # 1-ABC-123
-  PL: '^[A-Z]{2,3}\s?[A-Z0-9]{4,5}$'
-  GB: '^[A-Z]{2}\d{2}[A-Z]{3}$'          # AA00AAA (espace retiré au normalize)
+  BE: '^[12][A-Z]{3}\d{3}$'              # 1ABC123
+  PL: '^[A-Z]{2,3}[A-Z0-9]{4,5}$'
+  GB: '^[A-Z]{2}\d{2}[A-Z]{3}$'          # AA00AAA

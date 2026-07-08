@@ -6,6 +6,25 @@ Honnête inventaire de ce qui **n'est pas** encore traité. Classé par criticit
 
 ---
 
+## ✅ Corrigés dans l'itération « avocat du diable »
+
+Trous cachés identifiés puis **corrigés** (avec tests). Historisés ici pour transparence.
+
+| Trou trouvé | Correctif | Preuve |
+|-------------|-----------|--------|
+| Wrapper OCR `paddle_reco.py` codait l'API PaddleOCR **2.x** (morte) | Réécrit en **3.x** (`predict`, doc-unwarp off) | `anpr_poc.run --backend stub` tourne |
+| Le **vrai pipeline** n'avait jamais tourné | Ajout `StubDetector` + backend `stub` | émet `GX150GJ` end-to-end |
+| Aucun **test d'intégration** (cœur vert, produit non câblé) | `tests/test_pipeline.py` (détecteur/OCR factices) | 3 tests bout-en-bout |
+| **Fuite mémoire** : buffers des tracks non-émetteurs jamais purgés | `ConfirmBuffer.retain(active_ids)` chaque frame | `test_retain_evicts_inactive_tracks` |
+| Dédup par **chaîne exacte** (laissait passer les quasi-doublons OCR) | Dédup par **distance d'édition ≤ 1** | `test_dedup_edit_distance_catches_near_miss` |
+| Vote **fracturé** par les séparateurs (`GX-521-EW` vs `GX521EW`) | **Plaques canoniques** (alphanumérique) partout | regex sans séparateur + tests |
+| `crossed` (franchissement) calculé puis **jeté** | Gate optionnel `require_line_crossing` câblé | `test_require_crossing_blocks_until_crossed` |
+| Contrainte licence **non exécutée** | **CI** `pip-licenses` + `scripts/check_licenses.sh` | échoue sur AGPL/GPL |
+
+> Ce qui reste ci-dessous n'a **pas** été corrigé cette fois.
+
+---
+
 ## Cotation
 
 | Niveau | Sens |
@@ -33,6 +52,8 @@ Honnête inventaire de ce qui **n'est pas** encore traité. Classé par criticit
 | [R10](#r10--seuils-empiriques-non-retunés) | Seuils empiriques non retunés | 🟡 | Réglage |
 | [R11](#r11--sécurité-flux--stockage) | Sécurité flux & stockage | 🔵 | Sécurité |
 | [R12](#r12--contrôle-de-licences-non-automatisé) | Contrôle de licences non automatisé | 🔵 | Conformité |
+| [R13](#r13--routage-par-pays-non-câblé) | Routage de validation par pays non câblé | 🟡 | OCR |
+| [R14](#r14--deux-dépendances-lgpl--une-licence-unknown) | 2 deps LGPL + 1 licence UNKNOWN | 🔵 | Conformité |
 
 ---
 
@@ -126,13 +147,31 @@ Identifiants caméra RTSP, chiffrement du flux, protection des snapshots (qui co
 
 ## R12 — Contrôle de licences non automatisé 🔵
 
-La contrainte « MIT/Apache uniquement, zéro AGPL » est **documentée mais pas exécutable**. Un `pip-licenses` en CN/CI qui échoue à la moindre AGPL rendrait la garantie automatique. Bon marché, forte valeur.
+~~Documenté mais pas exécutable.~~ **Corrigé** : [`scripts/check_licenses.sh`](../scripts/check_licenses.sh) + job CI [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) échouent sur toute AGPL / GPL fort. Reste 🔵 car les motifs de noms de licences sont fragiles (à durcir) — voir R14.
+
+---
+
+## R13 — Routage par pays non câblé 🟡
+
+La validation de format est multi-pays, mais chaque `Read` a `country=None` → tout est validé avec `default_country`. La fonction [`read_country_letter()`](../anpr_poc/ocr/preprocess.py) (OCR de la lettre-pays euroband) **existe mais n'est jamais appelée**. Sur trafic **mixte** (FR + DE + IT…), tout serait validé comme FR → faux rejets/acceptations.
+
+**Correctif visé :** OCR de la bande euroband → renseigner `Read.country` → validation par le bon pays. Voir [Roadmap backlog](ROADMAP.md#idées--améliorations-backlog-non-planifié).
+
+---
+
+## R14 — Deux dépendances LGPL + une licence UNKNOWN 🔵
+
+L'audit `pip-licenses` ne trouve **aucune AGPL** (le vrai redline), mais :
+- **`crc32c` (LGPLv2+)** et **`python-bidi` (LGPL)** — tirées transitivement par `paddleocr`/`paddlepaddle`. LGPL ≠ AGPL : acceptable en usage bibliothèque dynamique non modifiée, mais **pas strictement MIT/Apache** comme le proclame la contrainte. Listées comme exceptions revues dans `check_licenses.sh`.
+- **`aistudio-sdk` : licence `UNKNOWN`** — à investiguer (probable Apache côté Baidu, à confirmer). Le contrôle CI devrait à terme **échouer sur `UNKNOWN`** plutôt que l'ignorer.
+
+Risque faible mais à trancher formellement avant mise en service (revue juridique légère).
 
 ---
 
 ## Synthèse pour décision
 
-- **Ce qui marche et est prouvé** : le cœur de confirmation (multi-frames, vote, dédup, validation par pays), le multi-plaque, la portabilité par conception, l'exigence de résolution chiffrée.
+- **Ce qui marche et est prouvé** : le cœur de confirmation (multi-frames, vote, dédup edit-distance, validation par pays, gate franchissement, purge mémoire), le **pipeline réel end-to-end** (`--backend stub`, test d'intégration), le multi-plaque, la portabilité par conception, l'exigence de résolution chiffrée, la CI licences.
 - **Le seul vrai bloqueur technique** : R1 (détecteur à entraîner) — tout le reste en dépend pour être mesuré.
 - **Les vrais bloqueurs de mise en service** : R3 (temps réel), R4 (calibration), R5 (RGPD).
 - **Le reste** : dette gérable en itération, tracée ici.

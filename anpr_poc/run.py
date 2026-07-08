@@ -19,15 +19,18 @@ def main() -> None:
     p = argparse.ArgumentParser(description="POC ANPR camions — vue fixe, plaques UE.")
     p.add_argument("source", help="Chemin vidéo ou URL RTSP.")
     p.add_argument("--config", default="config", help="Dossier config/.")
-    p.add_argument("--weights", required=True, help="Poids détecteur (.pt/.onnx).")
-    p.add_argument("--backend", default="auto", choices=["auto", "torch", "onnx", "tensorrt"])
+    p.add_argument("--weights", default="", help="Poids détecteur (.pt/.onnx). Inutile en backend stub.")
+    p.add_argument("--backend", default="auto", choices=["auto", "stub", "torch", "onnx", "tensorrt"])
     p.add_argument("--out", default="out/events.jsonl")
     a = p.parse_args()
+
+    if a.backend != "stub" and not a.weights:
+        p.error("--weights requis sauf en --backend stub")
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     cfg = load_config(a.config)
 
-    detector = load_detector(a.weights, backend=a.backend)
+    detector = load_detector(a.weights or "stub", backend=a.backend)
     tracker = PlateTracker(cfg.roi)
     ocr = PaddleReco()
     sink = MultiSink(JsonlSink(a.out), LogSink())

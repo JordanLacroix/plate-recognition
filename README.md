@@ -7,7 +7,8 @@ Une seule valeur confirmée par véhicule — jamais de sortie frame-par-frame.*
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](pyproject.toml)
-[![Tests](https://img.shields.io/badge/tests-11%2F11-brightgreen.svg)](tests/test_confirm.py)
+[![Tests](https://img.shields.io/badge/tests-18%2F18-brightgreen.svg)](tests/)
+[![CI licences](https://img.shields.io/badge/licences-AGPL--free%20(CI)-success.svg)](.github/workflows/ci.yml)
 [![Deps](https://img.shields.io/badge/licences-MIT%20%2F%20Apache--2.0-success.svg)](docs/PROBLEMATIQUES.md#p3--contamination-de-licence-agpl)
 [![Portage](https://img.shields.io/badge/backend-M1%20MPS%20%E2%86%92%20Jetson%20TensorRT-orange.svg)](docs/ARCHITECTURE.md#portabilité)
 [![Statut](https://img.shields.io/badge/statut-POC%20%C2%B7%20d%C3%A9tecteur%20%C3%A0%20entra%C3%AEner-yellow.svg)](docs/ROADMAP.md)
@@ -106,14 +107,16 @@ Détail et garde-fous : [Problématiques § licences](docs/PROBLEMATIQUES.md#p3-
 
 | Brique | État |
 |--------|------|
-| Cœur confirmation (vote, gate, validation, dédup) | ✅ Codé + testé (11/11) |
-| Config injectée + formats multi-pays (FR/GB/DE/ES/IT/NL/BE/PL) | ✅ |
+| Cœur confirmation (vote, gate, validation, dédup edit-distance, gate franchissement) | ✅ Codé + testé (18/18) |
+| Pipeline réel end-to-end (`anpr_poc.run --backend stub`) | ✅ Tourne (détecteur factice + OCR 3.x réel) |
+| Config injectée + formats multi-pays (FR/GB/DE/ES/IT/NL/BE/PL), plaques canoniques | ✅ |
 | Tracking multi-plaque (supervision) | ✅ Validé sur trafic réel |
-| OCR PP-OCRv5 | ✅ Intégré (démo) |
+| OCR PP-OCRv5/v6 (API 3.x) | ✅ Intégré |
 | Rendu vidéo annoté + démo bootstrap | ✅ |
+| Purge mémoire flux long + CI licences (aucune AGPL) | ✅ |
 | Harnais eval (CER, FP/FN) | ✅ Codé |
-| **Détecteur plaque entraîné** | ⛔ **Bloqueur** — stubs seulement, à entraîner sur données réelles |
-| Confidences OCR par caractère (CTC) | 🟡 Approximé (score-ligne répliqué) |
+| **Détecteur plaque entraîné** | ⛔ **Bloqueur** — stub only, à entraîner sur données réelles |
+| Confidences OCR par caractère (CTC) | 🟡 Approximé (score-ligne répliqué, documenté) |
 | Calibration homographie + ROI terrain | 🟡 Valeurs génériques |
 | Portage Jetson / TensorRT | ⬜ Prévu, non commencé |
 

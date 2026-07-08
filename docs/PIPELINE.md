@@ -89,7 +89,9 @@ flowchart TD
     FMT -->|ok| VOTE[vote char-par-char<br/>pondéré par confiance<br/>sur la longueur majoritaire]
     VOTE --> DEB{≥ K_CONSENSUS<br/>lectures concordantes ?}
     DEB -->|non| WAIT3[attendre plus de frames]
-    DEB -->|oui| DEDUP{même plaque déjà émise<br/>< fenêtre dédup ?}
+    DEB -->|oui| CROSS{ligne franchie ?<br/>si require_line_crossing}
+    CROSS -->|non| WAIT4[attendre franchissement]
+    CROSS -->|oui| DEDUP{plaque déjà émise<br/>< fenêtre &&<br/>distance édition ≤ seuil ?}
     DEDUP -->|oui| SUP[supprimer le doublon<br/>marquer track émis]
     DEDUP -->|non| EMIT[✅ émettre Event<br/>marquer track émis]
 
@@ -97,22 +99,31 @@ flowchart TD
     style VOTE fill:#ffe08a,stroke:#d98b00,color:#000
 ```
 
-### Les 5 filtres, dans l'ordre
+### Les 6 filtres, dans l'ordre
 
 1. **Gate qualité** — on ne garde que les lectures dont *tous* les caractères ont une confiance ≥ `CONF_MIN` (0.6). Élimine le bruit d'OCR faible.
 
-2. **Validation format** — regex par pays (`dict pays → regex`). **Pas** un regex UE unique. Si le pays est connu (regex définie), la validation est **stricte** (`strict_when_known=True`) : pas de repli. Un pays inconnu retombe sur un fallback structurel souple. Exemple FR SIV : `^[A-Z]{2}-\d{3}-[A-Z]{2}$` → une lecture partielle `GX-521-E` est **rejetée**.
+2. **Validation format** — regex par pays (`dict pays → regex`). **Pas** un regex UE unique. Si le pays est connu (regex définie), la validation est **stricte** (`strict_when_known=True`) : pas de repli. Un pays inconnu retombe sur un fallback structurel souple. Exemple FR SIV canonique : `^[A-Z]{2}\d{3}[A-Z]{2}$` → une lecture partielle `GX521E` est **rejetée**.
 
-3. **Vote consensus** — `per_char_majority_vote` : on filtre à la longueur de texte majoritaire, puis à chaque position on choisit le caractère par **vote pondéré par la confiance**. Robuste aux lectures basse-confiance sans les jeter d'office.
+3. **Vote consensus** — `per_char_majority_vote` : on filtre à la longueur de texte majoritaire, puis à chaque position on choisit le caractère par vote majoritaire pondéré par la confiance.
+   > ⚠️ **Honnêteté** : les confiances par caractère sont aujourd'hui le score-ligne PP-OCRv5 **répliqué** → le vote pondéré dégénère de fait en vote majoritaire simple. Vraies confiances par caractère = travail CTC/ONNX à venir ([Risques § R2](RISQUES.md#r2--confidences-ocr-par-caractère-approximées)).
 
 4. **Debounce** — on n'émet que si **≥ `K_CONSENSUS`** (3) lectures concordent avec le candidat. Empêche d'émettre sur une seule bonne frame chanceuse.
 
-5. **Anti-doublon inter-tracks** — si la même plaque a déjà été émise dans la fenêtre `dedup_window_sec` (5 s), on supprime le doublon. Gère la **fragmentation de tracking** (un véhicule que ByteTrack scinde en plusieurs `tracker_id`).
+5. **Gate franchissement** *(optionnel)* — si `require_line_crossing=true`, on n'émet que pour un track ayant franchi la ligne (`LineZone`). Par défaut `false`.
+
+6. **Anti-doublon inter-tracks** — si la même plaque, **à distance d'édition ≤ `dedup_edit_distance`** (1 par défaut), a déjà été émise dans la fenêtre `dedup_window_sec` (5 s), on supprime le doublon. Gère la **fragmentation de tracking** (un véhicule scindé en plusieurs `tracker_id`) *et* les quasi-doublons dus au bruit OCR (`GX521EW` vs `GX521EV`).
 
 ### Pourquoi cet ordre est important
 Le format valide **avant** le vote : les lectures mal formées ne polluent pas le calcul de la longueur majoritaire ni le vote. Le dédup vient **en dernier**, sur le candidat déjà confirmé, pour ne pas re-suivre un identifiant rejeté.
 
-> Ce comportement est verrouillé par [`tests/test_confirm.py`](../tests/test_confirm.py) (11 tests) : vote majoritaire, filtre longueur, pondération, gate, K-consensus, strict FR, fallback pays inconnu, dédup dans/hors fenêtre.
+### Plaques canoniques
+Les plaques sont normalisées en **forme canonique alphanumérique** (majuscules, séparateurs et espaces retirés) dès l'OCR. Les regex sont donc sans séparateur → robustesse au bruit OCR sur les tirets, et un vote qui ne se fracture plus entre `GX-521-EW` et `GX521EW`.
+
+### Mémoire (flux long)
+`ConfirmBuffer.retain(active_ids)`, appelé à chaque frame, **purge les buffers des tracks disparus** — indispensable sur un flux RTSP 24/7 (sinon fuite mémoire).
+
+> Comportement verrouillé par [`tests/test_confirm.py`](../tests/test_confirm.py) + [`tests/test_pipeline.py`](../tests/test_pipeline.py) (**18 tests**) : vote, filtre longueur, gate, K-consensus, strict FR, fallback, dédup (exact/edit-distance/fenêtre), gate franchissement, éviction mémoire, câblage bout-en-bout.
 
 ---
 
@@ -122,7 +133,7 @@ Le système est **multi-plaque par construction** : aucun code spécial n'est re
 
 - `ByteTrack` renvoie **N boîtes par frame**, une par véhicule, chacune avec son `tracker_id`.
 - `ConfirmBuffer` maintient **un buffer indépendant par `tracker_id`** (`dict[int, list[Read]]`). Chaque véhicule a son propre vote, son propre debounce, son propre état « émis ».
-- Le dédup opère par **chaîne de plaque**, pas globalement : deux plaques différentes dans la même frame ne se gênent pas.
+- Le dédup opère par **plaque (à distance d'édition près)**, pas globalement : deux plaques différentes dans la même frame ne se gênent pas.
 
 **Preuve terrain** : sur un clip d'autoroute (caméra fixe, 1080p), **5 plaques UK distinctes** ont été confirmées sur 5 secondes, jusqu'à **3 boîtes suivies simultanément** sur une même frame. Détail : [Problématiques § P7](PROBLEMATIQUES.md#p7--plusieurs-véhicules-simultanés).
 
@@ -139,6 +150,8 @@ Tous dans [`config/`](../config), jamais en dur.
 | `thresholds.yaml` | `det_conf_min` | 0.4 | Seuil de confiance du détecteur plaque |
 | `thresholds.yaml` | `euroband_strip_frac` | 0.11 | Fraction gauche croppée (euroband) |
 | `thresholds.yaml` | `dedup_window_sec` | 5.0 | Fenêtre anti-doublon inter-tracks |
+| `thresholds.yaml` | `dedup_edit_distance` | 1 | Distance d'édition max pour un doublon (0 = exact) |
+| `thresholds.yaml` | `require_line_crossing` | false | N'émettre qu'après franchissement de ligne |
 | `formats.yaml` | `default_country` | FR | Pays par défaut pour la validation |
 | `formats.yaml` | `regex_by_country` | FR/GB/DE/ES/IT/NL/BE/PL | Regex de format par pays |
 | `formats.yaml` | `strict_when_known` | true | Pays connu ⇒ strict, pas de fallback |

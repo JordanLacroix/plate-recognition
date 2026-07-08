@@ -18,6 +18,12 @@ class Thresholds(BaseModel):
     dedup_window_sec: float = Field(
         5.0, description="Fenêtre anti-doublon: même plaque ré-émise sur un autre tracker_id là-dedans -> supprimée."
     )
+    dedup_edit_distance: int = Field(
+        1, description="Distance d'édition max pour considérer 2 plaques comme doublon (0 = chaîne exacte)."
+    )
+    require_line_crossing: bool = Field(
+        False, description="Si True, n'émet que pour un track ayant franchi la ligne (LineZone)."
+    )
 
 
 class Roi(BaseModel):
@@ -28,23 +34,25 @@ class Roi(BaseModel):
     line_end: tuple[int, int]
 
 
-# Défauts miroir de config/formats.yaml: le code valide correctement même sans le yaml.
+# Défauts miroir de config/formats.yaml. Les plaques sont CANONIQUES: alphanumérique
+# uniquement (séparateurs -, ·, espaces retirés au normalize). Les regex n'ont donc
+# PAS de séparateur -> robuste au bruit OCR sur les tirets. Voir ocr.paddle_reco._normalize.
 _DEFAULT_REGEX_BY_COUNTRY: dict[str, str] = {
-    "FR": r"^[A-Z]{2}-\d{3}-[A-Z]{2}$",       # SIV: AA-123-AA
-    "DE": r"^[A-Z]{1,3}-[A-Z]{1,2}\d{1,4}$",
-    "ES": r"^\d{4}-[A-Z]{3}$",
+    "FR": r"^[A-Z]{2}\d{3}[A-Z]{2}$",         # SIV: AA123AA (affiché AA-123-AA)
+    "DE": r"^[A-Z]{1,3}[A-Z]{1,2}\d{1,4}$",
+    "ES": r"^\d{4}[A-Z]{3}$",
     "IT": r"^[A-Z]{2}\d{3}[A-Z]{2}$",
     "NL": r"^[A-Z0-9]{6}$",
-    "BE": r"^[12]-[A-Z]{3}-\d{3}$",
-    "PL": r"^[A-Z]{2,3}\s?[A-Z0-9]{4,5}$",
-    "GB": r"^[A-Z]{2}\d{2}[A-Z]{3}$",         # style courant 2001+: AA00AAA (espace retiré)
+    "BE": r"^[12][A-Z]{3}\d{3}$",
+    "PL": r"^[A-Z]{2,3}[A-Z0-9]{4,5}$",
+    "GB": r"^[A-Z]{2}\d{2}[A-Z]{3}$",         # style courant 2001+: AA00AAA
 }
 
 
 class FormatsConfig(BaseModel):
     default_country: str = "FR"
-    # Fallback structurel souple: autorise tirets (SIV FR, BE...) jusqu'à 10 chars.
-    fallback_regex: str = r"^[A-Z0-9-]{5,10}$"
+    # Fallback structurel souple (plaques canoniques alphanumériques, 5 à 10 chars).
+    fallback_regex: str = r"^[A-Z0-9]{5,10}$"
     regex_by_country: dict[str, str] = Field(
         default_factory=lambda: dict(_DEFAULT_REGEX_BY_COUNTRY)
     )
