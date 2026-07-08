@@ -141,7 +141,9 @@ Sorties actuelles : `jsonl` + log. Pas de base de données, pas d'idempotence ga
 
 ## R11 — Sécurité flux & stockage 🔵
 
-Identifiants caméra RTSP, chiffrement du flux, protection des snapshots (qui contiennent des plaques = données perso), contrôle d'accès aux sorties. Non traité.
+**Sécurité CI/CD : traitée.** Voir [`SECURITY.md`](../SECURITY.md) — moindre privilège du `GITHUB_TOKEN`, `persist-credentials:false`, `pip-audit` (CVE deps), CodeQL (SAST), Dependabot, contrôle de licences.
+
+**Sécurité runtime : non traitée.** Identifiants caméra RTSP, chiffrement du flux, protection des snapshots (plaques = données perso), contrôle d'accès aux sorties. Durcissement CI restant (SHA-pin des actions, scan de secrets, `pip-audit` bloquant) listé dans `SECURITY.md`.
 
 ---
 

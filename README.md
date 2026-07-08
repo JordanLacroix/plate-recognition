@@ -9,6 +9,7 @@ Une seule valeur confirmée par véhicule — jamais de sortie frame-par-frame.*
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](pyproject.toml)
 [![Tests](https://img.shields.io/badge/tests-18%2F18-brightgreen.svg)](tests/)
 [![CI licences](https://img.shields.io/badge/licences-AGPL--free%20(CI)-success.svg)](.github/workflows/ci.yml)
+[![Security](https://img.shields.io/badge/security-CodeQL%20%C2%B7%20pip--audit%20%C2%B7%20Dependabot-blue.svg)](SECURITY.md)
 [![Deps](https://img.shields.io/badge/licences-MIT%20%2F%20Apache--2.0-success.svg)](docs/PROBLEMATIQUES.md#p3--contamination-de-licence-agpl)
 [![Portage](https://img.shields.io/badge/backend-M1%20MPS%20%E2%86%92%20Jetson%20TensorRT-orange.svg)](docs/ARCHITECTURE.md#portabilité)
 [![Statut](https://img.shields.io/badge/statut-POC%20%C2%B7%20d%C3%A9tecteur%20%C3%A0%20entra%C3%AEner-yellow.svg)](docs/ROADMAP.md)

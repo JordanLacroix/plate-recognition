@@ -1,0 +1,16 @@
+version: 2
+updates:
+  # Dépendances Python: patchs de sécurité + montées de version.
+  - package-ecosystem: pip
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    labels: ["dependencies"]
+
+  # Actions GitHub: montées de version + rappel de pin sur SHA (durcissement supply-chain).
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    labels: ["ci", "security"]

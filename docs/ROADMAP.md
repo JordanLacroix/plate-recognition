@@ -92,6 +92,8 @@ flowchart LR
 - [ ] **RGPD** : base légale, information, durée de conservation, minimisation, DPIA si requise ([R5](RISQUES.md#r5--conformité-rgpd))
 - [x] CI **contrôle de licences** (`pip-licenses`, échec si AGPL) ([R12](RISQUES.md#r12--contrôle-de-licences-non-automatisé))
 - [ ] Durcir le contrôle : échouer aussi sur `UNKNOWN`, trancher les 2 deps LGPL ([R14](RISQUES.md#r14--deux-dépendances-lgpl--une-licence-unknown))
+- [x] **Sécurité CI/CD** : moindre privilège, `pip-audit` (CVE), CodeQL (SAST), Dependabot, `SECURITY.md`
+- [ ] Durcir la sécu CI : SHA-pin des actions, `pip-audit` bloquant, scan de secrets (gitleaks) ([SECURITY.md](../SECURITY.md))
 - [ ] Câbler le **routage par pays** (OCR lettre euroband → `Read.country`) ([R13](RISQUES.md#r13--routage-par-pays-non-câblé))
 
 ---
