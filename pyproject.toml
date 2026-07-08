@@ -21,7 +21,7 @@ dependencies = [
 # Détecteur torch — MPS sur M1. Poids LibreYOLO (MIT) ou RF-DETR base/S (Apache-2.0) fournis hors repo.
 torch = [
     "torch>=2.3,<2.6",
-    "torchvision>=0.18,<0.21",
+    "torchvision>=0.18,<0.29",
 ]
 dev = [
     "pytest>=8,<9",
