@@ -1,71 +1,118 @@
-# anpr_poc — ANPR camions (vue fixe, plaques UE)
+<div align="center">
 
-POC : depuis une caméra fixe, détecter + lire la plaque des camions, émettre **1 seule
-valeur confirmée par camion** (pas de sortie frame-par-frame). Voir `CLAUDE.md`.
+# 🚚 plate-recognition — ANPR camions (vue fixe, plaques UE)
 
-## Contraintes dures
-- Licences **MIT / Apache-2.0 uniquement**. Aucun AGPL (pas Ultralytics YOLO), aucun poids NC.
-- Tourne sur **Apple Silicon M1** : PyTorch MPS / CPU / ONNX Runtime + CoreML EP.
-- **Backend-agnostic** : `.pt`/`.onnx` sur Mac → TensorRT sur Jetson plus tard.
-- Temps réel déterministe : **pas de VLM/LLM** dans la boucle.
+**Lecture automatique de plaques d'immatriculation depuis une caméra fixe.
+Une seule valeur confirmée par véhicule — jamais de sortie frame-par-frame.**
 
-## Stack
-| Rôle | Choix | Licence |
-|------|-------|---------|
-| Détection plaque | LibreYOLO (primaire) / RF-DETR base·S (repli) | MIT / Apache-2.0 |
-| Tracking | supervision (ByteTrack + LineZone) | MIT |
-| OCR reco | PaddleOCR PP-OCRv5 (reco seule) | Apache-2.0 |
-| Vision utils | OpenCV | Apache-2.0 |
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](pyproject.toml)
+[![Tests](https://img.shields.io/badge/tests-11%2F11-brightgreen.svg)](tests/test_confirm.py)
+[![Deps](https://img.shields.io/badge/licences-MIT%20%2F%20Apache--2.0-success.svg)](docs/PROBLEMATIQUES.md#p3--contamination-de-licence-agpl)
+[![Portage](https://img.shields.io/badge/backend-M1%20MPS%20%E2%86%92%20Jetson%20TensorRT-orange.svg)](docs/ARCHITECTURE.md#portabilité)
+[![Statut](https://img.shields.io/badge/statut-POC%20%C2%B7%20d%C3%A9tecteur%20%C3%A0%20entra%C3%AEner-yellow.svg)](docs/ROADMAP.md)
 
-## Pipeline
-Trigger (ROI/LineZone) → Détection plaque → Tracking (1 `tracker_id`/camion) →
-Redressement (homographie pré-calibrée) → strip euroband → OCR reco (conf/char) →
-**Confirmation** (buffer + gate + validation format + vote char-par-char + debounce K) → Sink.
+</div>
 
-Le cœur est `anpr_poc/confirm/` — 90 % des bugs vivent ici. Testé dans `tests/test_confirm.py`.
+---
 
-## Structure
+## 📖 Documentation
+
+| Document | Contenu |
+|----------|---------|
+| **[🧱 Architecture](docs/ARCHITECTURE.md)** | Briques fonctionnelles & techniques, carte des modules, portabilité |
+| **[🔀 Pipeline & Workflow](docs/PIPELINE.md)** | Le flux frame → événement, étape par étape. La logique de confirmation en détail |
+| **[⚠️ Problématiques & solutions](docs/PROBLEMATIQUES.md)** | Les 9 problèmes durs de l'ANPR et comment ils sont traités (avec preuves) |
+| **[🎯 Risques restants](docs/RISQUES.md)** | Dette, inconnues, blocages, points RGPD/sécurité à traiter |
+| **[✅ Roadmap & TODO](docs/ROADMAP.md)** | Jalons POC → production → Jetson, avec cases à cocher |
+
+> 💡 Nouveau sur le projet ? Lis dans l'ordre : **Architecture → Pipeline → Problématiques**.
+
+---
+
+## 🎬 En une image
+
+Test sur trafic réel (caméra fixe, 1080p, plaques UK), 5 s : **5 plaques suivies et confirmées en parallèle**, une boîte par véhicule.
+
+```
+#2 GX15 OGJ   #3 MW51 VSU   #4 NA13 NRU   ...   (multi-plaque simultané)
+```
+
+Chaque véhicule = un `tracker_id` = un buffer de lectures = **un seul événement final**, après vote caractère-par-caractère sur plusieurs frames. C'est le cœur du système ([détail](docs/PIPELINE.md#la-logique-de-confirmation)).
+
+---
+
+## ⚡ Démarrage rapide
+
+```bash
+# Python 3.10+ requis (unions pydantic). Sur Mac : brew install python@3.13
+python3.13 -m venv .venv && source .venv/bin/activate
+pip install -e ".[torch,dev]"          # ou : uv sync --extra torch --extra dev
+
+# Tests du cœur (aucun modèle requis)
+pytest tests/ -q                        # 11 passed
+
+# Pipeline réel (nécessite un détecteur plaque entraîné — voir Roadmap)
+python -m anpr_poc.run <video|rtsp> --weights weights/plate.onnx --out out/events.jsonl
+
+# Démo bootstrap (sans détecteur dédié — valide la plomberie + rend une vidéo annotée)
+python -m demo.bootstrap_demo --video clip.mp4 --start-sec 0 --end-sec 5 --country GB
+```
+
+Sortie : un événement JSON par véhicule.
+
+```json
+{"plate": "GX-521-EW", "tracker_id": 3, "timestamp": 37.5, "confidence": 0.992, "country": "FR", "snapshot_path": null}
+```
+
+---
+
+## 🗺️ Structure du dépôt
+
 ```
 anpr_poc/
-  config.py        chargement config injectée (pydantic)
-  types.py         dataclasses partagées (Read, Event, BBox…)
-  detect/          détecteur backend-agnostic (torch/onnx/tensorrt) + export ONNX
-  track/           wrapper supervision ByteTrack + LineZone
-  ocr/             PP-OCRv5 reco + rectify() + euroband_strip()
-  confirm/         buffer/tracker_id, vote consensus, validate_format, debounce
-  io/              source vidéo (fichier/RTSP), sink événements (jsonl/log)
-  pipeline.py      orchestration frame → event
-  run.py           entrée CLI
-config/            homographie.json, roi.json, formats.yaml, thresholds.yaml
-eval/              harnais non-régression (CER + FP/FN événement)
-data/              clips + crops + ground_truth.json (hors git)
-tests/             unit tests du cœur confirmation
+├── config.py         chargement config injectée (pydantic) — aucun seuil en dur
+├── types.py          dataclasses partagées (Read, Event, BBox…)
+├── detect/           détecteur backend-agnostic (torch/onnx/tensorrt) + export ONNX
+├── track/            wrapper supervision (ByteTrack + LineZone)
+├── ocr/              PP-OCRv5 reco + rectify() + euroband_strip()
+├── confirm/          ★ cœur : buffer/tracker_id, vote, validate_format, debounce, dédup
+├── io/               source vidéo (fichier/RTSP), sink événements (jsonl/log)
+├── pipeline.py       orchestration frame → événement
+└── run.py            entrée CLI
+config/               homographie.json · roi.json · formats.yaml · thresholds.yaml
+demo/                 démo bootstrap (PaddleOCR + rendu vidéo annoté)
+eval/                 harnais non-régression (CER + taux FP/FN)
+tests/                tests unitaires du cœur confirmation
+docs/                 📖 cette documentation
 ```
 
-## Install
-```bash
-uv sync --extra torch --extra dev     # ou: pip install -e ".[torch,dev]"
-```
+---
 
-## Lancer
-```bash
-python -m anpr_poc.run <video|rtsp> --weights weights/plate.onnx --out out/events.jsonl
-```
+## 🔒 Contraintes dures (non négociables)
 
-## Eval
-```bash
-python -m eval.harness --weights weights/plate.onnx
-```
+- **Licences MIT / Apache-2.0 uniquement.** Aucun AGPL (⇒ **pas** d'Ultralytics YOLOv5/v8/v11), aucun poids non-commercial (pas de YOLO-NAS). RF-DETR limité à **base/S** (XL/2XL = licence PML, interdit).
+- **Apple Silicon M1** : PyTorch MPS / CPU / ONNX Runtime + CoreML EP.
+- **Portable Jetson** : tout modèle exportable ONNX → TensorRT. Aucun code Mac-only dans le chemin d'inférence.
+- **Temps réel déterministe** : pas de VLM/LLM dans la boucle (hallucination = fausse plaque plausible).
 
-## Tests (cœur, sans modèle)
-```bash
-pytest tests/ -q
-```
+Détail et garde-fous : [Problématiques § licences](docs/PROBLEMATIQUES.md#p3--contamination-de-licence-agpl).
 
-## Tous les seuils
-`config/thresholds.yaml` : `conf_min`, `k_consensus`, `det_conf_min`, `euroband_strip_frac`.
-Jamais en dur dans le code.
+---
 
-## Portage Jetson (plus tard)
-Même code, backend commuté `.onnx → .engine` (INT8/FP16). Wheels aarch64 depuis
-`pypi.jetson-ai-lab.io`. Refroidissement actif requis.
+## 📌 Statut actuel
+
+| Brique | État |
+|--------|------|
+| Cœur confirmation (vote, gate, validation, dédup) | ✅ Codé + testé (11/11) |
+| Config injectée + formats multi-pays (FR/GB/DE/ES/IT/NL/BE/PL) | ✅ |
+| Tracking multi-plaque (supervision) | ✅ Validé sur trafic réel |
+| OCR PP-OCRv5 | ✅ Intégré (démo) |
+| Rendu vidéo annoté + démo bootstrap | ✅ |
+| Harnais eval (CER, FP/FN) | ✅ Codé |
+| **Détecteur plaque entraîné** | ⛔ **Bloqueur** — stubs seulement, à entraîner sur données réelles |
+| Confidences OCR par caractère (CTC) | 🟡 Approximé (score-ligne répliqué) |
+| Calibration homographie + ROI terrain | 🟡 Valeurs génériques |
+| Portage Jetson / TensorRT | ⬜ Prévu, non commencé |
+
+👉 Feuille de route complète et cases à cocher : **[docs/ROADMAP.md](docs/ROADMAP.md)**.
