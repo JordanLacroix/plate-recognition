@@ -125,6 +125,7 @@ flowchart LR
 
 ## Idées / améliorations (backlog non planifié)
 
+- [ ] **Formateur d'affichage joli** par pays (canonique `GX521EW` → `GX-521-EW`) pour les sorties/logs
 - [ ] OCR de la **lettre-pays** (euroband) pour router automatiquement la validation par pays
 - [ ] Fusion multi-lectures avant/arrière d'un même véhicule
 - [ ] Score de qualité d'image par crop (rejeter les crops trop flous en amont de l'OCR)

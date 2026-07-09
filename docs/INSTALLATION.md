@@ -70,7 +70,7 @@ Le cœur de confirmation ne dépend que de numpy + pydantic + pyyaml :
 
 ```bash
 pip install numpy pyyaml pydantic pytest
-pytest tests/ -q                     # 11 passed
+pytest tests/ -q                     # 34 passed
 ```
 
 Idéal pour valider la logique sans télécharger PaddleOCR ni torch.
@@ -95,7 +95,7 @@ python --version
 
 # 2. Cœur : tests unitaires (aucun modèle requis)
 python -m pytest tests/ -q
-# → attendu : 11 passed
+# → attendu : 34 passed
 
 # 3. Config réelle chargée
 python -c "from anpr_poc.config import load_config; c=load_config('config'); \

@@ -99,7 +99,7 @@ Passage Mac → Jetson = changer l'exécuteur, pas la logique. Détail : [Archit
 | Source | Taille plaque | Résultat OCR |
 |--------|---------------|--------------|
 | 640 × 360 | ~90 px de large | ❌ illisible — au mieux `5210` partiel (score 0.71) |
-| 1280 × 720 | ~180 px de large | ✅ `GX-521-EW` **complète**, confiance 0.99, confirmée par le pipeline |
+| 1280 × 720 | ~180 px de large | ✅ `GX521EW` (plaque GX-521-EW) **complète**, confiance 0.99, confirmée par le pipeline |
 
 **Solution = exigence matérielle chiffrée**, à imposer au déploiement :
 - **≥ 1080p** sur le champ utile ;
@@ -152,7 +152,7 @@ GX15 OGJ · MW51 VSU · NA13 NRU · AP05 JEO · LM13 VCV · KH05 ZZK
 
 **Solution.** Désactiver `use_doc_unwarping` / `use_doc_orientation_classify`. Bonus : deux modèles en moins → inférence plus rapide. De plus, la démo dessine sur la **boîte OCR brute de la frame** (position exacte), pas sur la boîte Kalman prédite qui « traîne » derrière un véhicule rapide.
 
-**Preuve.** Après correctif : boîte `#4 GX-521-EW` **exactement sur la plaque**, label calé juste au-dessus.
+**Preuve.** Après correctif : boîte `#4 GX521EW` **exactement sur la plaque**, label calé juste au-dessus.
 
 > Cas d'école du POC : un défaut de *coordonnées* peut se déguiser en défaut de *modèle*. Toujours superposer la boîte brute sur l'image source pour trancher.
 

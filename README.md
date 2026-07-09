@@ -56,7 +56,7 @@ python3.13 -m venv .venv && source .venv/bin/activate
 pip install -e ".[torch,dev]"          # ou : uv sync --extra torch --extra dev
 
 # Tests du cœur (aucun modèle requis)
-pytest tests/ -q                        # 11 passed
+pytest tests/ -q                        # 34 passed
 
 # Pipeline réel (nécessite un détecteur plaque entraîné — voir Roadmap)
 python -m anpr_poc.run <video|rtsp> --weights weights/plate.onnx --out out/events.jsonl
@@ -65,10 +65,10 @@ python -m anpr_poc.run <video|rtsp> --weights weights/plate.onnx --out out/event
 python -m demo.bootstrap_demo --video clip.mp4 --start-sec 0 --end-sec 5 --country GB
 ```
 
-Sortie : un événement JSON par véhicule.
+Sortie : un événement JSON par véhicule. La plaque est en **forme canonique** (alphanumérique, sans séparateur : `GX521EW`) — l'affichage « joli » `GX-521-EW` est un item [backlog](docs/ROADMAP.md#idées--améliorations-backlog-non-planifié).
 
 ```json
-{"plate": "GX-521-EW", "tracker_id": 3, "timestamp": 37.5, "confidence": 0.992, "country": "FR", "snapshot_path": null}
+{"plate": "GX521EW", "tracker_id": 3, "timestamp": 37.5, "confidence": 0.992, "country": "FR", "snapshot_path": null}
 ```
 
 ---
@@ -110,7 +110,7 @@ Détail et garde-fous : [Problématiques § licences](docs/PROBLEMATIQUES.md#p3-
 
 | Brique | État |
 |--------|------|
-| Cœur confirmation (vote, gate, validation, dédup edit-distance, gate franchissement) | ✅ Codé + testé (25/25) |
+| Cœur confirmation (vote, gate, validation, dédup edit-distance, gate franchissement) | ✅ Codé + testé (34/34) |
 | Pipeline réel end-to-end (`anpr_poc.run --backend stub`) | ✅ Tourne (détecteur factice + OCR 3.x réel) |
 | Config injectée + **validation fail-fast** (ROI, homographie), plaques canoniques | ✅ |
 | Snapshots de preuve (fond flouté RGPD) | ✅ Câblé (`--snapshots-dir`) |

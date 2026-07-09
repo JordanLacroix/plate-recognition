@@ -6,9 +6,9 @@ Honnête inventaire de ce qui **n'est pas** encore traité. Classé par criticit
 
 ---
 
-## ✅ Corrigés dans l'itération « avocat du diable »
+## ✅ Déjà corrigé (historisé pour transparence)
 
-Trous cachés identifiés puis **corrigés** (avec tests). Historisés ici pour transparence.
+### Itération « avocat du diable » — trous cachés dans le pipeline
 
 | Trou trouvé | Correctif | Preuve |
 |-------------|-----------|--------|
@@ -21,7 +21,24 @@ Trous cachés identifiés puis **corrigés** (avec tests). Historisés ici pour 
 | `crossed` (franchissement) calculé puis **jeté** | Gate optionnel `require_line_crossing` câblé | `test_require_crossing_blocks_until_crossed` |
 | Contrainte licence **non exécutée** | **CI** `pip-licenses` + `scripts/check_licenses.sh` | échoue sur AGPL/GPL |
 
-> Ce qui reste ci-dessous n'a **pas** été corrigé cette fois.
+### Itération « durcissement CI/CD & qualité »
+
+| Trou trouvé | Correctif | Preuve |
+|-------------|-----------|--------|
+| **Claim `python 3.10+` non vérifié** (CI en 3.12 seul) | Matrice CI **3.10 · 3.11 · 3.12 · 3.13** | 4 jobs verts |
+| Job tests dodgeait les **vraies deps** (liste triée à la main) | Job `integration` : `pip install -e .` + smoke import + tests | job vert |
+| **Couverture** non mesurée | `pytest-cov`, seuil **90 %** (actuel 94 %) | job tests |
+| **Formatage** non vérifié | `ruff format --check` en CI | job lint |
+| Aucun **scan de secrets** | Gitleaks (historique complet) | job `secrets` |
+| Pas de **SBOM** ni build vérifié | `python -m build` + `twine check` + CycloneDX | job `build` |
+| Sécurité **CI/CD** absente | moindre privilège, `pip-audit`, CodeQL, Dependabot, `SECURITY.md` | 11 jobs CI |
+| `Event.snapshot_path` **champ mort** | Snapshots de preuve (fond flouté RGPD), `--snapshots-dir` | `test_snapshot_*` |
+| Config foireuse passait **silencieusement** | Validation fail-fast (ROI, homographie 3×3 inversible) | `test_config.py` |
+| mypy **strict jamais exécuté** (15 erreurs latentes) | mypy strict en CI, 0 erreur | job lint |
+
+**Bilan tests : 11 → 34 · couverture 94 % · CI 5 → 11 jobs.**
+
+> Ce qui reste ci-dessous n'a **pas** encore été corrigé.
 
 ---
 
@@ -51,7 +68,7 @@ Trous cachés identifiés puis **corrigés** (avec tests). Historisés ici pour 
 | [R9](#r9--dépréciation-bytetrack-supervision) | Dépréciation ByteTrack (supervision) | 🟡 | Dépendance |
 | [R10](#r10--seuils-empiriques-non-retunés) | Seuils empiriques non retunés | 🟡 | Réglage |
 | [R11](#r11--sécurité-flux--stockage) | Sécurité flux & stockage | 🔵 | Sécurité |
-| [R12](#r12--contrôle-de-licences-non-automatisé) | Contrôle de licences non automatisé | 🔵 | Conformité |
+| [R12](#r12--contrôle-de-licences-non-automatisé-corrigé) | Contrôle de licences non automatisé | ✅ | Conformité |
 | [R13](#r13--routage-par-pays-non-câblé) | Routage de validation par pays non câblé | 🟡 | OCR |
 | [R14](#r14--deux-dépendances-lgpl--une-licence-unknown) | 2 deps LGPL + 1 licence UNKNOWN | 🔵 | Conformité |
 
@@ -92,6 +109,8 @@ Leviers non encore actionnés :
 
 - `homographie.json` = **matrice identité** → aucun redressement réel.
 - `roi.json` = polygone/ligne **génériques** (valeurs 1280×720 arbitraires).
+
+> **Garde-fou ajouté** : la config est désormais **validée au chargement** (fail-fast) — ROI ≥ 3 points, ligne non dégénérée, homographie 3×3 inversible. Ça empêche un déploiement avec une calibration syntaxiquement cassée, mais **ne remplace pas** la vraie calibration terrain (ci-dessous).
 
 Sur site, il faut : capturer la vue réelle, calibrer l'homographie (4 points plaque connus), tracer la ROI et la ligne de franchissement. Tant que non fait, le trigger et le redressement ne valent rien.
 
@@ -147,9 +166,9 @@ Sorties actuelles : `jsonl` + log. Pas de base de données, pas d'idempotence ga
 
 ---
 
-## R12 — Contrôle de licences non automatisé 🔵
+## R12 — Contrôle de licences non automatisé ✅ *(corrigé)*
 
-~~Documenté mais pas exécutable.~~ **Corrigé** : [`scripts/check_licenses.sh`](../scripts/check_licenses.sh) + job CI [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) échouent sur toute AGPL / GPL fort. Reste 🔵 car les motifs de noms de licences sont fragiles (à durcir) — voir R14.
+[`scripts/check_licenses.sh`](../scripts/check_licenses.sh) + job CI `licenses` échouent sur toute **AGPL / GPL fort** *et* sur toute licence **`UNKNOWN` non revue**. Reste un point de vigilance mineur : les motifs de noms de licences sont fragiles (dépendent du texte renvoyé par PyPI) — durcissement possible via une liste blanche stricte (`--allow-only`).
 
 ---
 
@@ -165,7 +184,7 @@ La validation de format est multi-pays, mais chaque `Read` a `country=None` → 
 
 L'audit `pip-licenses` ne trouve **aucune AGPL** (le vrai redline), mais :
 - **`crc32c` (LGPLv2+)** et **`python-bidi` (LGPL)** — tirées transitivement par `paddleocr`/`paddlepaddle`. LGPL ≠ AGPL : acceptable en usage bibliothèque dynamique non modifiée, mais **pas strictement MIT/Apache** comme le proclame la contrainte. Listées comme exceptions revues dans `check_licenses.sh`.
-- **`aistudio-sdk` : licence `UNKNOWN`** — à investiguer (probable Apache côté Baidu, à confirmer). Le contrôle CI devrait à terme **échouer sur `UNKNOWN`** plutôt que l'ignorer.
+- **`aistudio-sdk` : licence `UNKNOWN`** — à investiguer (probable Apache côté Baidu, à confirmer amont). Le contrôle CI **échoue désormais sur toute `UNKNOWN`** ; `aistudio-sdk` est explicitement **whitelisté** (`REVIEWED`) dans `check_licenses.sh` en attendant confirmation. Toute nouvelle `UNKNOWN` bloquera la CI.
 
 Risque faible mais à trancher formellement avant mise en service (revue juridique légère).
 
@@ -173,7 +192,7 @@ Risque faible mais à trancher formellement avant mise en service (revue juridiq
 
 ## Synthèse pour décision
 
-- **Ce qui marche et est prouvé** : le cœur de confirmation (multi-frames, vote, dédup edit-distance, validation par pays, gate franchissement, purge mémoire), le **pipeline réel end-to-end** (`--backend stub`, test d'intégration), le multi-plaque, la portabilité par conception, l'exigence de résolution chiffrée, la CI licences.
+- **Ce qui marche et est prouvé** : le cœur de confirmation (multi-frames, vote, dédup edit-distance, validation par pays, gate franchissement, purge mémoire), le **pipeline réel end-to-end** (`--backend stub`, test d'intégration), le multi-plaque, la portabilité par conception, l'exigence de résolution chiffrée. **Socle qualité/CI solide** : 34 tests / couverture 94 %, matrice Python 3.10–3.13, lint+format+mypy strict, licences (AGPL+UNKNOWN), CVE, secrets, SBOM, CodeQL.
 - **Le seul vrai bloqueur technique** : R1 (détecteur à entraîner) — tout le reste en dépend pour être mesuré.
 - **Les vrais bloqueurs de mise en service** : R3 (temps réel), R4 (calibration), R5 (RGPD).
 - **Le reste** : dette gérable en itération, tracée ici.

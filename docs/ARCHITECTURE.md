@@ -128,7 +128,7 @@ Le fichier [`pipeline.py`](../anpr_poc/pipeline.py) est le seul point qui conna�
 
 4. **Déterministe.** Pas de VLM/LLM dans la boucle. Le seul « jugement » est un vote arithmétique + des regex — traçable et reproductible.
 
-5. **Le cœur est isolé et testé.** Tout [`confirm/`](../anpr_poc/confirm) fonctionne sans aucun modèle (numpy pur) → 11 tests unitaires rapides couvrent la logique où vivent 90 % des bugs.
+5. **Le cœur est isolé et testé.** Tout [`confirm/`](../anpr_poc/confirm) fonctionne sans aucun modèle (numpy pur) → 34 tests (dont le cœur pur numpy) couvrent la logique où vivent 90 % des bugs.
 
 ---
 

@@ -1,4 +1,4 @@
 {
-  "_comment": "Verite-terrain par clip. 1 plaque/clip (POC). Rempli a la main apres filmage.",
-  "clip_001.mp4": "AB-123-CD"
+  "_comment": "Verite-terrain par clip, forme CANONIQUE (alphanumerique, sans separateur) pour matcher la sortie du pipeline. 1 plaque/clip (POC).",
+  "clip_001.mp4": "AB123CD"
 }

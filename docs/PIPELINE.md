@@ -123,7 +123,7 @@ Les plaques sont normalisées en **forme canonique alphanumérique** (majuscules
 ### Mémoire (flux long)
 `ConfirmBuffer.retain(active_ids)`, appelé à chaque frame, **purge les buffers des tracks disparus** — indispensable sur un flux RTSP 24/7 (sinon fuite mémoire).
 
-> Comportement verrouillé par [`tests/test_confirm.py`](../tests/test_confirm.py) + [`tests/test_pipeline.py`](../tests/test_pipeline.py) (**18 tests**) : vote, filtre longueur, gate, K-consensus, strict FR, fallback, dédup (exact/edit-distance/fenêtre), gate franchissement, éviction mémoire, câblage bout-en-bout.
+> Comportement verrouillé par [`tests/test_confirm.py`](../tests/test_confirm.py) + [`tests/test_pipeline.py`](../tests/test_pipeline.py) (**34 tests**) : vote, filtre longueur, gate, K-consensus, strict FR, fallback, dédup (exact/edit-distance/fenêtre), gate franchissement, éviction mémoire, câblage bout-en-bout.
 
 ---
 

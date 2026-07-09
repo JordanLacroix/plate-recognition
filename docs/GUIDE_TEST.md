@@ -148,7 +148,7 @@ La boîte doit être **exactement sur la plaque**, label juste au-dessus (cf. [P
 
 | Clip | Réglages | Résultat |
 |------|----------|----------|
-| Volvo 720p, camion de face (35–40 s) | `--country FR --k 2` | **1 événement** `GX-521-EW` (conf 0.99) |
+| Volvo 720p, camion de face (35–40 s) | `--country FR --k 2` | **1 événement** `GX521EW` (plaque GX-521-EW, conf 0.99) |
 | Autoroute 1080p, trafic dense (0–5 s) | `--country GB --every 1 --k 2` | **5 plaques UK** confirmées, jusqu'à 3 boîtes simultanées |
 | Même Volvo en **360p** | idem | ❌ illisible — démontre l'exigence de résolution |
 
@@ -178,11 +178,11 @@ python -m anpr_poc.run <video|rtsp> --weights weights/plate.onnx --out out/event
 
 Chaque ligne de `*.events.jsonl` :
 ```json
-{"text": "GX-521-EW", "tracker_id": 3, "t": 37.48, "conf": 0.992}
+{"text": "GX521EW", "tracker_id": 3, "t": 37.48, "conf": 0.992}
 ```
 | Champ | Sens |
 |-------|------|
-| `text` / `plate` | Plaque confirmée (après vote sur plusieurs frames) |
+| `text` / `plate` | Plaque confirmée, **forme canonique** alphanumérique (`GX521EW`, pas `GX-521-EW`) |
 | `tracker_id` | Identifiant du véhicule (1 événement max par id) |
 | `t` / `timestamp` | Horodatage (s depuis le début du clip) |
 | `conf` | Confiance moyenne des lectures concordantes |
@@ -214,7 +214,7 @@ Pour mesurer objectivement sur une banque de clips étiquetés :
 
 1. Renseigner la vérité-terrain — [`data/ground_truth.json`](../data/ground_truth.json) :
    ```json
-   { "clip_001.mp4": "AB-123-CD", "clip_002.mp4": "GX-521-EW" }
+   { "clip_001.mp4": "AB123CD", "clip_002.mp4": "GX521EW" }
    ```
 2. Lancer (nécessite le détecteur du Niveau 3) :
    ```bash
