@@ -47,8 +47,8 @@ python -m pytest tests/ -q
 
 **Attendu :**
 ```
-..................                                             [100%]
-25 passed in 0.35s
+..................................          [100%]
+34 passed in 0.40s
 ```
 
 Ce que ça couvre — cœur ([`test_confirm.py`](../tests/test_confirm.py)), intégration ([`test_pipeline.py`](../tests/test_pipeline.py)), config ([`test_config.py`](../tests/test_config.py)), snapshot ([`test_snapshot.py`](../tests/test_snapshot.py)) :
@@ -77,10 +77,12 @@ Ce que ça couvre — cœur ([`test_confirm.py`](../tests/test_confirm.py)), int
 | `test_roi_line_not_degenerate` | Validation config : ligne non dégénérée |
 | `test_homography_must_be_3x3` / `_singular_rejected` | Validation config : homographie 3×3 inversible |
 | `test_snapshot_written` / `_blur_keeps_plate_sharp` | Snapshot écrit, fond flouté / plaque nette |
+| `test_stub_*` / `test_load_detector_*` | Détecteur factice + fabrique de backend |
+| `test_jsonl_sink_*` / `test_multi_sink_fans_out` | Sinks événements (jsonl / log / multi) |
 
-> Verbeux : `python -m pytest tests/ -v`
+> **Couverture** : 94 % du code testable (seuil CI **90 %**, config dans `pyproject.toml`). La glue liée à une infra lourde (torch/paddle/supervision/flux vidéo) est exclue du calcul — voir `[tool.coverage.run] omit`.
 >
-> **Lint & types** (comme en CI) : `ruff check anpr_poc eval tests && mypy anpr_poc`
+> Verbeux : `python -m pytest tests/ -v` · **Lint/types/format** (comme en CI) : `ruff check anpr_poc eval tests && ruff format --check anpr_poc eval tests && mypy anpr_poc`
 
 ---
 

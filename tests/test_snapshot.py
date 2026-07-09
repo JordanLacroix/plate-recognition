@@ -32,5 +32,5 @@ def test_snapshot_blur_keeps_plate_sharp(tmp_path: Path) -> None:
     out = cv2.imread(path)
     # JPEG lossy -> pas d'égalité exacte, mais la plaque reste nette/sombre (préservée)
     # tandis que le fond reste clair (flouté mais toujours ~200).
-    assert out[46:54, 82:118].mean() < 60    # plaque préservée (motif sombre)
-    assert out[10:20, 10:40].mean() > 150    # fond conservé/flouté, pas noirci
+    assert out[46:54, 82:118].mean() < 60  # plaque préservée (motif sombre)
+    assert out[10:20, 10:40].mean() > 150  # fond conservé/flouté, pas noirci

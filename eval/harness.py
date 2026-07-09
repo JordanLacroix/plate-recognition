@@ -25,7 +25,9 @@ def load_ground_truth(path: str | Path) -> dict[str, str]:
         return json.load(f)
 
 
-def run_eval(clips_dir: str | Path, gt_path: str | Path, config_dir: str, weights: str, backend: str) -> EvalReport:
+def run_eval(
+    clips_dir: str | Path, gt_path: str | Path, config_dir: str, weights: str, backend: str
+) -> EvalReport:
     gt = load_ground_truth(gt_path)
     cfg = load_config(config_dir)
     detector = load_detector(weights, backend=backend)
@@ -36,7 +38,9 @@ def run_eval(clips_dir: str | Path, gt_path: str | Path, config_dir: str, weight
         clip_path = Path(clips_dir) / clip_rel
         # tracker neuf par clip: pas de fuite d'état inter-clips
         tracker = PlateTracker(cfg.roi)
-        pipeline = Pipeline(config=cfg, detector=detector, tracker=tracker, ocr=ocr, sink=_NullSink())
+        pipeline = Pipeline(
+            config=cfg, detector=detector, tracker=tracker, ocr=ocr, sink=_NullSink()
+        )
         with VideoSource(str(clip_path)) as src:
             events = pipeline.run(src)
         pred = events[0].plate if events else None

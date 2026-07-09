@@ -56,9 +56,7 @@ class ConfirmBuffer:
         # 1. gate qualité
         reads = [r for r in self._buffer[tracker_id] if r.min_conf >= self._conf_min]
         # 2. validation format (par pays de la lecture, sinon défaut)
-        reads = [
-            r for r in reads if self._validate(r.text, r.country or self._default_country)
-        ]
+        reads = [r for r in reads if self._validate(r.text, r.country or self._default_country)]
         if not reads:
             return None
 
@@ -118,7 +116,9 @@ class ConfirmBuffer:
     def _is_recent_duplicate(self, candidate: str, timestamp: float) -> bool:
         """Vrai si une plaque à distance d'édition ≤ seuil a été émise dans la fenêtre."""
         for plate, ts in self._emitted_plates:
-            if (timestamp - ts) <= self._dedup_window and _edit_distance(candidate, plate) <= self._dedup_edit:
+            if (timestamp - ts) <= self._dedup_window and _edit_distance(
+                candidate, plate
+            ) <= self._dedup_edit:
                 return True
         return False
 

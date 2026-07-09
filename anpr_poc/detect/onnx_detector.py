@@ -32,5 +32,7 @@ class OnnxDetector:
     def _preprocess(self, frame: np.ndarray) -> np.ndarray:
         raise NotImplementedError("resize/letterbox + normalize + NCHW selon le modèle exporté.")
 
-    def _postprocess(self, outputs: list[np.ndarray], hw: tuple[int, int]) -> tuple[np.ndarray, np.ndarray]:
+    def _postprocess(
+        self, outputs: list[np.ndarray], hw: tuple[int, int]
+    ) -> tuple[np.ndarray, np.ndarray]:
         raise NotImplementedError("decode + NMS -> (boxes_xyxy px, scores).")

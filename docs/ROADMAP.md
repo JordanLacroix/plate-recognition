@@ -38,8 +38,8 @@ flowchart LR
 - [x] Export ONNX (chemin Jetson)
 - [x] **Validation config fail-fast** : ROI (≥3 points, ligne non dégénérée), homographie (3×3 inversible)
 - [x] **Snapshots de preuve** : fond flouté (RGPD), `Event.snapshot_path` rempli
-- [x] **25 tests** : cœur + intégration + config + snapshot
-- [x] **CI** GitHub Actions : lint (ruff) + types (mypy strict) + tests + licences + sécurité
+- [x] **34 tests**, couverture **94 %** (seuil CI 90 %) : cœur + intégration + config + snapshot + stub + sinks
+- [x] **CI complète** : lint+format+mypy · tests **matrice 3.10–3.13** · install réel (`pip install -e .`) · licences (AGPL+UNKNOWN) · CVE (`pip-audit`) · **secrets** (gitleaks) · **build+SBOM** (CycloneDX) · CodeQL
 - [x] Démo bootstrap + rendu vidéo annoté
 - [x] Documentation complète (ce dossier `docs/`)
 

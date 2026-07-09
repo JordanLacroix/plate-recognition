@@ -40,10 +40,16 @@ class TorchDetector:
         raise NotImplementedError("forward + post-process -> list[Detection]")
 
     @staticmethod
-    def _to_detections(boxes_xyxy: np.ndarray, scores: np.ndarray, conf_min: float) -> list[Detection]:
+    def _to_detections(
+        boxes_xyxy: np.ndarray, scores: np.ndarray, conf_min: float
+    ) -> list[Detection]:
         """Helper commun de post-process, réutilisable par le backend ONNX."""
         out: list[Detection] = []
         for (x1, y1, x2, y2), s in zip(boxes_xyxy, scores):
             if s >= conf_min:
-                out.append(Detection(bbox=BBox(float(x1), float(y1), float(x2), float(y2)), confidence=float(s)))
+                out.append(
+                    Detection(
+                        bbox=BBox(float(x1), float(y1), float(x2), float(y2)), confidence=float(s)
+                    )
+                )
         return out

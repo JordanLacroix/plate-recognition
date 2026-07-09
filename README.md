@@ -6,8 +6,9 @@
 Une seule valeur confirmée par véhicule — jamais de sortie frame-par-frame.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](pyproject.toml)
-[![Tests](https://img.shields.io/badge/tests-25%2F25-brightgreen.svg)](tests/)
+[![Python 3.10–3.13](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue.svg)](.github/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-34%2F34-brightgreen.svg)](tests/)
+[![Coverage](https://img.shields.io/badge/coverage-94%25-brightgreen.svg)](pyproject.toml)
 [![Lint](https://img.shields.io/badge/ruff%20%C2%B7%20mypy-strict-brightgreen.svg)](.github/workflows/ci.yml)
 [![CI licences](https://img.shields.io/badge/licences-AGPL--free%20(CI)-success.svg)](.github/workflows/ci.yml)
 [![Security](https://img.shields.io/badge/security-CodeQL%20%C2%B7%20pip--audit%20%C2%B7%20Dependabot-blue.svg)](SECURITY.md)
@@ -116,7 +117,7 @@ Détail et garde-fous : [Problématiques § licences](docs/PROBLEMATIQUES.md#p3-
 | Tracking multi-plaque (supervision) | ✅ Validé sur trafic réel |
 | OCR PP-OCRv5/v6 (API 3.x) | ✅ Intégré |
 | Rendu vidéo annoté + démo bootstrap | ✅ |
-| CI complète : **lint (ruff) + types (mypy strict)** + tests + licences + sécurité | ✅ |
+| CI : lint+format+mypy · tests **matrice 3.10–3.13** · install réel · couverture 94% · licences · CVE · **secrets** · **build+SBOM** · CodeQL | ✅ |
 | Purge mémoire flux long | ✅ |
 | Harnais eval (CER, FP/FN) | ✅ Codé |
 | **Détecteur plaque entraîné** | ⛔ **Bloqueur** — stub only, à entraîner sur données réelles |

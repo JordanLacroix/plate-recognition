@@ -25,3 +25,11 @@ data/crops/
 out/
 *.log
 snapshots/
+
+# Build / SBOM artifacts
+dist/
+build/
+sbom.json
+.coverage
+htmlcov/
+.pytest_cache/

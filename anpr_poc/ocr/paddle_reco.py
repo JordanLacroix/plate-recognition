@@ -34,7 +34,9 @@ class PaddleReco:
             lang=lang,
         )
 
-    def read(self, crop: np.ndarray, frame_idx: int = -1, country: str | None = None) -> Read | None:
+    def read(
+        self, crop: np.ndarray, frame_idx: int = -1, country: str | None = None
+    ) -> Read | None:
         """OCR un crop plaque déjà redressé/strippé. Retourne None si vide."""
         result = self._ocr.predict(crop)
         text, line_score = self._extract(result)

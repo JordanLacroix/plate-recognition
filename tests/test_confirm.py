@@ -18,6 +18,7 @@ def _read(text: str, conf: float = 0.9, country: str = "FR") -> Read:
 
 # --- vote ---
 
+
 def test_vote_picks_majority_char() -> None:
     reads = [_read("AB123CD"), _read("AB123CD"), _read("AB123CE")]
     assert per_char_majority_vote(reads) == "AB123CD"
@@ -36,26 +37,28 @@ def test_vote_weights_by_confidence() -> None:
 
 # --- validation format ---
 
+
 def test_validator_fr_strict() -> None:
-    v = make_validator(FormatsConfig())        # strict_when_known=True par défaut
-    assert v("AB123CD", "FR")                  # SIV canonique OK
-    assert not v("AB12", "FR")                 # trop court
-    assert not v("ABC123", "FR")               # pays connu -> strict, PAS de fallback
-    assert not v("AB123C", "FR")               # lecture partielle rejetée
+    v = make_validator(FormatsConfig())  # strict_when_known=True par défaut
+    assert v("AB123CD", "FR")  # SIV canonique OK
+    assert not v("AB12", "FR")  # trop court
+    assert not v("ABC123", "FR")  # pays connu -> strict, PAS de fallback
+    assert not v("AB123C", "FR")  # lecture partielle rejetée
 
 
 def test_validator_fallback_for_unknown_country() -> None:
     v = make_validator(FormatsConfig())
-    assert v("XYZ99", "ZZ")                     # pays sans regex -> fallback souple
-    assert not v("AB", "ZZ")                    # trop court même en fallback
+    assert v("XYZ99", "ZZ")  # pays sans regex -> fallback souple
+    assert not v("AB", "ZZ")  # trop court même en fallback
 
 
 def test_validator_permissive_mode() -> None:
     v = make_validator(FormatsConfig(strict_when_known=False))
-    assert v("ABC123", "FR")                    # fallback réactivé pour pays connu
+    assert v("ABC123", "FR")  # fallback réactivé pour pays connu
 
 
 # --- dédup inter-tracks ---
+
 
 def test_dedup_suppresses_same_plate_across_tracks() -> None:
     v = make_validator(FormatsConfig())
@@ -98,6 +101,7 @@ def test_dedup_exact_only_when_distance_zero() -> None:
 
 # --- émission / gate / debounce ---
 
+
 def test_buffer_emits_once_on_consensus() -> None:
     v = make_validator(FormatsConfig())
     buf = ConfirmBuffer(v, conf_min=0.6, k_consensus=3)
@@ -126,6 +130,7 @@ def test_buffer_waits_for_k_consensus() -> None:
 
 # --- gate franchissement de ligne ---
 
+
 def test_require_crossing_blocks_until_crossed() -> None:
     v = make_validator(FormatsConfig())
     buf = ConfirmBuffer(v, conf_min=0.6, k_consensus=2, require_crossing=True)
@@ -138,11 +143,12 @@ def test_require_crossing_blocks_until_crossed() -> None:
 
 # --- éviction mémoire ---
 
+
 def test_retain_evicts_inactive_tracks() -> None:
     v = make_validator(FormatsConfig())
     buf = ConfirmBuffer(v, conf_min=0.6, k_consensus=3)
-    buf.add(1, _read("AB123CD"), timestamp=0.0)   # sous le K, buffer conservé
+    buf.add(1, _read("AB123CD"), timestamp=0.0)  # sous le K, buffer conservé
     buf.add(2, _read("XY999ZZ"), timestamp=0.0)
     assert 1 in buf._buffer and 2 in buf._buffer
-    buf.retain({1})                                # track 2 disparu
+    buf.retain({1})  # track 2 disparu
     assert 1 in buf._buffer and 2 not in buf._buffer

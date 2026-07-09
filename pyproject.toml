@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "POC ANPR camions — vue fixe, plaques UE. Backend-agnostic (MPS/CPU/ONNX-CoreML), portage Jetson TensorRT prévu."
 requires-python = ">=3.10"
 license = { text = "MIT" }
+readme = "README.md"
 
 # Contrainte dure: MIT / Apache-2.0 uniquement. Aucun AGPL (pas Ultralytics), aucun poids NC.
 dependencies = [
@@ -25,6 +26,7 @@ torch = [
 ]
 dev = [
     "pytest>=8,<10",
+    "pytest-cov>=5,<8",
     "ruff>=0.5,<1",
     "mypy>=1.10,<3",
 ]
@@ -39,6 +41,25 @@ packages = ["anpr_poc"]
 [tool.ruff]
 line-length = 100
 target-version = "py310"
+
+[tool.pytest.ini_options]
+addopts = "--cov --cov-report=term-missing --cov-fail-under=90"
+
+[tool.coverage.run]
+source = ["anpr_poc"]
+# Glue liée à une infra lourde (modèles/GPU/flux) non testable en unitaire léger.
+omit = [
+    "anpr_poc/detect/libreyolo.py",     # torch + poids
+    "anpr_poc/detect/onnx_detector.py", # onnxruntime + modèle
+    "anpr_poc/detect/export.py",        # torch.onnx.export
+    "anpr_poc/ocr/paddle_reco.py",      # paddle + modèle PP-OCR
+    "anpr_poc/track/tracker.py",        # supervision ByteTrack
+    "anpr_poc/io/source.py",            # cv2.VideoCapture (flux/vidéo)
+    "anpr_poc/run.py",                  # entrée CLI
+]
+
+[tool.coverage.report]
+exclude_also = ["raise NotImplementedError", "if __name__ == .__main__.:"]
 
 [tool.mypy]
 # 3.12: les stubs numpy 2.x utilisent le `type` statement (PEP 695), non parsable

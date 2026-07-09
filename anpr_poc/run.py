@@ -19,10 +19,16 @@ def main() -> None:
     p = argparse.ArgumentParser(description="POC ANPR camions — vue fixe, plaques UE.")
     p.add_argument("source", help="Chemin vidéo ou URL RTSP.")
     p.add_argument("--config", default="config", help="Dossier config/.")
-    p.add_argument("--weights", default="", help="Poids détecteur (.pt/.onnx). Inutile en backend stub.")
-    p.add_argument("--backend", default="auto", choices=["auto", "stub", "torch", "onnx", "tensorrt"])
+    p.add_argument(
+        "--weights", default="", help="Poids détecteur (.pt/.onnx). Inutile en backend stub."
+    )
+    p.add_argument(
+        "--backend", default="auto", choices=["auto", "stub", "torch", "onnx", "tensorrt"]
+    )
     p.add_argument("--out", default="out/events.jsonl")
-    p.add_argument("--snapshots-dir", default="", help="Écrit un snapshot (fond flouté RGPD) par événement.")
+    p.add_argument(
+        "--snapshots-dir", default="", help="Écrit un snapshot (fond flouté RGPD) par événement."
+    )
     a = p.parse_args()
 
     if a.backend != "stub" and not a.weights:

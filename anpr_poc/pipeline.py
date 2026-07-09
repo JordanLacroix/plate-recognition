@@ -87,7 +87,7 @@ class Pipeline:
 
     def _read_plate(self, frame: np.ndarray, bbox: BBox, frame_idx: int) -> Read | None:
         x1, y1, x2, y2 = (int(v) for v in bbox.xyxy)
-        crop = frame[max(0, y1):y2, max(0, x1):x2]
+        crop = frame[max(0, y1) : y2, max(0, x1) : x2]
         if crop.size == 0:
             return None
         crop = rectify(crop, self._H)

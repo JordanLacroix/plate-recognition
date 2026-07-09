@@ -10,14 +10,13 @@ on:
 permissions:
   contents: read
 
-# Annule les runs superflus (économie + surface d'attaque réduite).
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   lint:
-    name: Lint & types (ruff + mypy)
+    name: Lint, format & types
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -27,35 +26,40 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
-      - name: Install (léger — mypy résout les stubs manquants via ignore_missing_imports)
-        run: |
+      - run: |
           python -m pip install --upgrade pip
           pip install ruff mypy numpy pydantic pyyaml
-      - name: Ruff
+      - name: Ruff (lint)
         run: ruff check anpr_poc eval tests
+      - name: Ruff (format)
+        run: ruff format --check anpr_poc eval tests
       - name: Mypy (strict)
         run: mypy anpr_poc
 
   tests:
-    name: Tests (cœur + intégration)
+    name: Tests py${{ matrix.python-version }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v7
         with:
-          persist-credentials: false   # pas de token git laissé dans le workspace
+          persist-credentials: false
       - uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
       - name: Install (léger — fakes, pas de modèle)
         run: |
           python -m pip install --upgrade pip
-          pip install numpy pydantic pyyaml "opencv-python-headless>=4.9,<6" pytest
-      - name: Pytest
+          pip install numpy pydantic pyyaml "opencv-python-headless>=4.9,<6" pytest pytest-cov
+      - name: Pytest (+ couverture, seuil dans pyproject)
         run: python -m pytest tests/ -q
 
-  licenses:
-    name: Contrôle de licences (aucune AGPL)
+  integration:
+    name: Install réel & smoke (deps déclarées)
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -65,12 +69,32 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
-      - name: Install projet complet
+      - name: "pip install -e . (vraies deps declarees)"
         run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - name: Smoke import du paquet
+        run: |
+          python -c "import anpr_poc, anpr_poc.pipeline, anpr_poc.track.tracker, anpr_poc.ocr.paddle_reco; from anpr_poc.detect.base import load_detector; load_detector('x', backend='stub'); print('import OK')"
+      - name: Tests sur l'arbre de deps réel
+        run: python -m pytest tests/ -q
+
+  licenses:
+    name: Contrôle de licences (aucune AGPL / UNKNOWN)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: |
           python -m pip install --upgrade pip
           pip install -e .
           pip install pip-licenses
-      - name: Échec si AGPL / GPL fort dans l'arbre de dépendances
+      - name: Échec si AGPL / GPL fort / UNKNOWN non revue
         run: bash scripts/check_licenses.sh
 
   security:
@@ -84,15 +108,57 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
-      - name: Install projet + outils
-        run: |
+      - run: |
           python -m pip install --upgrade pip
           pip install -e .
           pip install pip-audit
       - name: Audit vulnérabilités (pip-audit / base PyPA)
-        # Informatif en POC: un CVE amont ne bloque pas la PR mais reste visible.
-        # À passer bloquant (retirer continue-on-error) avant mise en service.
-        continue-on-error: true
+        continue-on-error: true   # informatif en POC ; à passer bloquant avant prod
         run: pip-audit --desc --progress-spinner off
       - name: Cohérence des dépendances
         run: pip check
+
+  secrets:
+    name: Scan de secrets
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          fetch-depth: 0            # gitleaks scanne tout l'historique
+      - name: Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build:
+    name: Build paquet + SBOM
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Build wheel + sdist et vérif métadonnées
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine
+          python -m build
+          twine check dist/*
+      - name: Génère un SBOM (CycloneDX)
+        run: |
+          pip install cyclonedx-bom
+          pip install -e .
+          cyclonedx-py environment --output-format JSON -o sbom.json
+      - name: Publie les artefacts (dist + SBOM)
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-and-sbom
+          path: |
+            dist/*
+            sbom.json
+          if-no-files-found: error
