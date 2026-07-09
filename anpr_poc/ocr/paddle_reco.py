@@ -12,6 +12,7 @@ le modèle reco en ONNX et lire les logits CTC (cf. RISQUES R2 / ROADMAP Jalon 2
 from __future__ import annotations
 
 import re
+from typing import Any
 
 import numpy as np
 
@@ -50,7 +51,7 @@ class PaddleReco:
         )
 
     @staticmethod
-    def _extract(result: object) -> tuple[str, float]:
+    def _extract(result: Any) -> tuple[str, float]:
         """Extrait (meilleur texte, score) de la sortie predict() 3.x.
 
         predict() rend une liste de dict avec 'rec_texts' et 'rec_scores'. On prend

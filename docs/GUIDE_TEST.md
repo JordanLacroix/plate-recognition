@@ -48,10 +48,10 @@ python -m pytest tests/ -q
 **Attendu :**
 ```
 ..................                                             [100%]
-18 passed in 0.30s
+25 passed in 0.35s
 ```
 
-Ce que ça couvre — cœur ([`tests/test_confirm.py`](../tests/test_confirm.py)) + intégration ([`tests/test_pipeline.py`](../tests/test_pipeline.py)) :
+Ce que ça couvre — cœur ([`test_confirm.py`](../tests/test_confirm.py)), intégration ([`test_pipeline.py`](../tests/test_pipeline.py)), config ([`test_config.py`](../tests/test_config.py)), snapshot ([`test_snapshot.py`](../tests/test_snapshot.py)) :
 
 | Test | Garantit |
 |------|----------|
@@ -73,8 +73,14 @@ Ce que ça couvre — cœur ([`tests/test_confirm.py`](../tests/test_confirm.py)
 | `test_pipeline_emits_one_event_after_consensus` | **Câblage bout-en-bout** (détecteur/OCR factices) |
 | `test_pipeline_no_event_when_below_consensus` | Pas d'émission sous le seuil |
 | `test_pipeline_rejects_invalid_format` | Format invalide rejeté end-to-end |
+| `test_roi_polygon_needs_three_points` | Validation config : ROI ≥ 3 points |
+| `test_roi_line_not_degenerate` | Validation config : ligne non dégénérée |
+| `test_homography_must_be_3x3` / `_singular_rejected` | Validation config : homographie 3×3 inversible |
+| `test_snapshot_written` / `_blur_keeps_plate_sharp` | Snapshot écrit, fond flouté / plaque nette |
 
 > Verbeux : `python -m pytest tests/ -v`
+>
+> **Lint & types** (comme en CI) : `ruff check anpr_poc eval tests && mypy anpr_poc`
 
 ---
 
@@ -152,9 +158,10 @@ La boîte doit être **exactement sur la plaque**, label juste au-dessus (cf. [P
 
 Le vrai `anpr_poc.run` s'exécute **end-to-end** sans modèle entraîné, via le backend `stub` (boîte fixe + OCR PP-OCRv6 réel + tracking + confirmation) :
 ```bash
-python -m anpr_poc.run data/clips/mon_clip.mp4 --backend stub --out out/events.jsonl
+python -m anpr_poc.run data/clips/mon_clip.mp4 --backend stub --out out/events.jsonl \
+  --snapshots-dir out/snaps      # optionnel : snapshot par événement, fond flouté (RGPD)
 ```
-Utile pour valider le câblage réel (pas la démo), l'intégration OCR 3.x, le format de sortie. **Ne détecte pas vraiment les plaques** (boîte centrale factice) — c'est un test de plomberie, pas de qualité.
+Utile pour valider le câblage réel (pas la démo), l'intégration OCR 3.x, le format de sortie, l'écriture des snapshots. **Ne détecte pas vraiment les plaques** (boîte centrale factice) — c'est un test de plomberie, pas de qualité. Chaque événement porte alors un `snapshot_path`.
 
 ### 3b. Avec un vrai détecteur *(bloqué)*
 

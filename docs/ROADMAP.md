@@ -36,8 +36,10 @@ flowchart LR
 - [x] Sinks événements (jsonl / log / multi)
 - [x] Harnais eval (CER + FP/FN)
 - [x] Export ONNX (chemin Jetson)
-- [x] **18 tests** : cœur (`test_confirm`) + intégration (`test_pipeline`)
-- [x] **CI** GitHub Actions : tests + contrôle de licences (aucune AGPL)
+- [x] **Validation config fail-fast** : ROI (≥3 points, ligne non dégénérée), homographie (3×3 inversible)
+- [x] **Snapshots de preuve** : fond flouté (RGPD), `Event.snapshot_path` rempli
+- [x] **25 tests** : cœur + intégration + config + snapshot
+- [x] **CI** GitHub Actions : lint (ruff) + types (mypy strict) + tests + licences + sécurité
 - [x] Démo bootstrap + rendu vidéo annoté
 - [x] Documentation complète (ce dossier `docs/`)
 

@@ -37,6 +37,8 @@ class PlateTracker:
         crossed_in, crossed_out = self._line.trigger(tracked)
 
         out: list[tuple[int, BBox, bool]] = []
+        if tracked.tracker_id is None:
+            return out
         for i, tid in enumerate(tracked.tracker_id):
             x1, y1, x2, y2 = tracked.xyxy[i]
             crossed = bool(crossed_in[i] or crossed_out[i])

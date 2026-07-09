@@ -105,7 +105,7 @@ Une plaque d'immatriculation est une **donnée à caractère personnel** (RGPD, 
 - sécurité et journalisation des accès ;
 - éventuelle DPIA (analyse d'impact) selon l'usage.
 
-**À cadrer avant toute mise en service réelle**, pas après. Un ingénieur sérieux bloquera ici si ce n'est pas anticipé.
+**Amorce en place** : les snapshots de preuve floutent tout sauf la plaque (`--snapshots-dir`, minimisation/anonymisation). Mais l'essentiel du cadre RGPD (base légale, information, rétention, DPIA) reste **à cadrer avant toute mise en service réelle**, pas après. Un ingénieur sérieux bloquera ici si ce n'est pas anticipé.
 
 ---
 

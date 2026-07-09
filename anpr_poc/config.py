@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import yaml
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class Thresholds(BaseModel):
@@ -32,6 +33,19 @@ class Roi(BaseModel):
     polygon: list[tuple[int, int]]
     line_start: tuple[int, int]
     line_end: tuple[int, int]
+
+    @field_validator("polygon")
+    @classmethod
+    def _polygon_min_points(cls, v: list[tuple[int, int]]) -> list[tuple[int, int]]:
+        if len(v) < 3:
+            raise ValueError(f"ROI polygon: au moins 3 points requis, reçu {len(v)}")
+        return v
+
+    @model_validator(mode="after")
+    def _line_not_degenerate(self) -> Roi:
+        if self.line_start == self.line_end:
+            raise ValueError("ROI: line_start et line_end identiques (ligne dégénérée)")
+        return self
 
 
 # Défauts miroir de config/formats.yaml. Les plaques sont CANONIQUES: alphanumérique
@@ -67,8 +81,23 @@ class AppConfig(BaseModel):
     formats: FormatsConfig
     # Homographie 3x3 pré-calibrée (vue fixe). None = pas de redressement.
     homography: list[list[float]] | None = None
+    # Snapshots de preuve. dir None -> désactivé. Fond flouté pour RGPD.
+    snapshot_dir: str | None = None
+    snapshot_blur_background: bool = True
 
     model_config = {"arbitrary_types_allowed": True}
+
+    @model_validator(mode="after")
+    def _homography_valid(self) -> AppConfig:
+        """Fail-fast: homographie doit être 3x3 et inversible (det != 0)."""
+        if self.homography is None:
+            return self
+        m = np.asarray(self.homography, dtype=np.float64)
+        if m.shape != (3, 3):
+            raise ValueError(f"homographie: matrice 3x3 attendue, reçu {m.shape}")
+        if abs(float(np.linalg.det(m))) < 1e-9:
+            raise ValueError("homographie: matrice singulière (non inversible)")
+        return self
 
     @property
     def homography_matrix(self) -> np.ndarray | None:
@@ -77,14 +106,16 @@ class AppConfig(BaseModel):
         return np.asarray(self.homography, dtype=np.float64)
 
 
-def _load_yaml(path: Path) -> dict:
+def _load_yaml(path: Path) -> dict[str, Any]:
     with path.open("r", encoding="utf-8") as f:
-        return yaml.safe_load(f) or {}
+        data = yaml.safe_load(f)
+    return data if isinstance(data, dict) else {}
 
 
-def _load_json(path: Path) -> dict:
+def _load_json(path: Path) -> dict[str, Any]:
     with path.open("r", encoding="utf-8") as f:
-        return json.load(f)
+        data = json.load(f)
+    return data if isinstance(data, dict) else {}
 
 
 def load_config(config_dir: str | Path) -> AppConfig:

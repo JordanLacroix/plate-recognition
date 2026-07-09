@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections import Counter
+from collections import Counter, defaultdict
 
 from anpr_poc.types import Read
 
@@ -29,10 +29,11 @@ def per_char_majority_vote(reads: list[Read]) -> str | None:
 
     out: list[str] = []
     for pos in range(target_len):
-        weights: Counter[str] = Counter()
+        weights: dict[str, float] = defaultdict(float)
         for r in aligned:
             ch = r.text[pos]
             conf = r.char_confidences[pos] if pos < len(r.char_confidences) else 1.0
             weights[ch] += conf
-        out.append(weights.most_common(1)[0][0])
+        # caractère au poids max (départage stable par ordre alphabétique)
+        out.append(max(sorted(weights), key=lambda c: weights[c]))
     return "".join(out)

@@ -7,17 +7,20 @@ Trigger(ROI) -> Détection -> Tracking -> Redressement -> strip euroband -> OCR
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+
+import numpy as np
 
 from anpr_poc.config import AppConfig
 from anpr_poc.confirm import ConfirmBuffer, make_validator
 from anpr_poc.detect.base import Detector
 from anpr_poc.io.sink import EventSink
+from anpr_poc.io.snapshot import SnapshotWriter
 from anpr_poc.io.source import VideoSource
 from anpr_poc.ocr.paddle_reco import PaddleReco
 from anpr_poc.ocr.preprocess import euroband_strip, rectify
 from anpr_poc.track.tracker import PlateTracker
-from anpr_poc.types import BBox, Event
+from anpr_poc.types import BBox, Event, Read
 
 log = logging.getLogger("anpr")
 
@@ -44,6 +47,11 @@ class Pipeline:
         self._H = self.config.homography_matrix
         self._strip = t.euroband_strip_frac
         self._det_conf = t.det_conf_min
+        self._snapshots = (
+            SnapshotWriter(self.config.snapshot_dir, self.config.snapshot_blur_background)
+            if self.config.snapshot_dir
+            else None
+        )
 
     def run(self, source: VideoSource) -> list[Event]:
         events: list[Event] = []
@@ -69,12 +77,15 @@ class Pipeline:
 
                 event = self._confirm.add(tracker_id, read, timestamp=ts, crossed=crossed)
                 if event is not None:
+                    if self._snapshots is not None:
+                        path = self._snapshots.save(frame, bbox, event)
+                        event = replace(event, snapshot_path=path)
                     self.sink.emit(event)
                     events.append(event)
                     self._confirm.flush(tracker_id)
         return events
 
-    def _read_plate(self, frame, bbox: BBox, frame_idx: int):
+    def _read_plate(self, frame: np.ndarray, bbox: BBox, frame_idx: int) -> Read | None:
         x1, y1, x2, y2 = (int(v) for v in bbox.xyxy)
         crop = frame[max(0, y1):y2, max(0, x1):x2]
         if crop.size == 0:

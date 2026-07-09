@@ -7,7 +7,8 @@ Une seule valeur confirmée par véhicule — jamais de sortie frame-par-frame.*
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](pyproject.toml)
-[![Tests](https://img.shields.io/badge/tests-18%2F18-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-25%2F25-brightgreen.svg)](tests/)
+[![Lint](https://img.shields.io/badge/ruff%20%C2%B7%20mypy-strict-brightgreen.svg)](.github/workflows/ci.yml)
 [![CI licences](https://img.shields.io/badge/licences-AGPL--free%20(CI)-success.svg)](.github/workflows/ci.yml)
 [![Security](https://img.shields.io/badge/security-CodeQL%20%C2%B7%20pip--audit%20%C2%B7%20Dependabot-blue.svg)](SECURITY.md)
 [![Deps](https://img.shields.io/badge/licences-MIT%20%2F%20Apache--2.0-success.svg)](docs/PROBLEMATIQUES.md#p3--contamination-de-licence-agpl)
@@ -108,13 +109,15 @@ Détail et garde-fous : [Problématiques § licences](docs/PROBLEMATIQUES.md#p3-
 
 | Brique | État |
 |--------|------|
-| Cœur confirmation (vote, gate, validation, dédup edit-distance, gate franchissement) | ✅ Codé + testé (18/18) |
+| Cœur confirmation (vote, gate, validation, dédup edit-distance, gate franchissement) | ✅ Codé + testé (25/25) |
 | Pipeline réel end-to-end (`anpr_poc.run --backend stub`) | ✅ Tourne (détecteur factice + OCR 3.x réel) |
-| Config injectée + formats multi-pays (FR/GB/DE/ES/IT/NL/BE/PL), plaques canoniques | ✅ |
+| Config injectée + **validation fail-fast** (ROI, homographie), plaques canoniques | ✅ |
+| Snapshots de preuve (fond flouté RGPD) | ✅ Câblé (`--snapshots-dir`) |
 | Tracking multi-plaque (supervision) | ✅ Validé sur trafic réel |
 | OCR PP-OCRv5/v6 (API 3.x) | ✅ Intégré |
 | Rendu vidéo annoté + démo bootstrap | ✅ |
-| Purge mémoire flux long + CI licences (aucune AGPL) | ✅ |
+| CI complète : **lint (ruff) + types (mypy strict)** + tests + licences + sécurité | ✅ |
+| Purge mémoire flux long | ✅ |
 | Harnais eval (CER, FP/FN) | ✅ Codé |
 | **Détecteur plaque entraîné** | ⛔ **Bloqueur** — stub only, à entraîner sur données réelles |
 | Confidences OCR par caractère (CTC) | 🟡 Approximé (score-ligne répliqué, documenté) |

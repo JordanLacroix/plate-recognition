@@ -70,7 +70,7 @@ Détecteur fine-tuné **sur la plaque** (pas de détection de texte générique)
 Voir section dédiée ci-dessous.
 
 ### 8. Publication
-`Event` émis vers un ou plusieurs sinks (`JsonlSink`, `LogSink`, `MultiSink`). Un seul événement par `tracker_id`.
+`Event` émis vers un ou plusieurs sinks (`JsonlSink`, `LogSink`, `MultiSink`). Un seul événement par `tracker_id`. Si `snapshot_dir` est défini, un **snapshot de preuve** est écrit (fond flouté, plaque nette — RGPD) et son chemin renseigné dans `Event.snapshot_path` ([`io/snapshot.py`](../anpr_poc/io/snapshot.py)).
 
 ---
 
@@ -156,7 +156,11 @@ Tous dans [`config/`](../config), jamais en dur.
 | `formats.yaml` | `regex_by_country` | FR/GB/DE/ES/IT/NL/BE/PL | Regex de format par pays |
 | `formats.yaml` | `strict_when_known` | true | Pays connu ⇒ strict, pas de fallback |
 | `roi.json` | `polygon`, `line_*` | générique | Zone utile + ligne de franchissement |
-| `homographie.json` | `matrix` | identité | Redressement pré-calibré |
+| `homographie.json` | `matrix` | identité | Redressement pré-calibré (validé 3×3 inversible au chargement) |
+| (AppConfig / CLI) | `snapshot_dir` | none | Dossier snapshots de preuve (`--snapshots-dir`) |
+| (AppConfig) | `snapshot_blur_background` | true | Floute tout sauf la plaque (RGPD) |
+
+> **Validation fail-fast** : au chargement, la config rejette une ROI à < 3 points, une ligne dégénérée, ou une homographie non 3×3 / singulière → pas de déploiement calibré n'importe comment ([`config.py`](../anpr_poc/config.py)).
 
 ---
 

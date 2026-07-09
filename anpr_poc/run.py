@@ -22,6 +22,7 @@ def main() -> None:
     p.add_argument("--weights", default="", help="Poids détecteur (.pt/.onnx). Inutile en backend stub.")
     p.add_argument("--backend", default="auto", choices=["auto", "stub", "torch", "onnx", "tensorrt"])
     p.add_argument("--out", default="out/events.jsonl")
+    p.add_argument("--snapshots-dir", default="", help="Écrit un snapshot (fond flouté RGPD) par événement.")
     a = p.parse_args()
 
     if a.backend != "stub" and not a.weights:
@@ -29,6 +30,8 @@ def main() -> None:
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     cfg = load_config(a.config)
+    if a.snapshots_dir:
+        cfg = cfg.model_copy(update={"snapshot_dir": a.snapshots_dir})
 
     detector = load_detector(a.weights or "stub", backend=a.backend)
     tracker = PlateTracker(cfg.roi)
