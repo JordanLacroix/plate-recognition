@@ -41,7 +41,10 @@ line-length = 100
 target-version = "py310"
 
 [tool.mypy]
-python_version = "3.10"
+# 3.12: les stubs numpy 2.x utilisent le `type` statement (PEP 695), non parsable
+# sous 3.12. Le plancher réel du projet reste 3.10, garanti par ruff (target py310)
+# + requires-python. mypy vérifie juste les types, pas la compat syntaxique 3.10.
+python_version = "3.12"
 strict = true
 ignore_missing_imports = true
 plugins = ["pydantic.mypy"]
