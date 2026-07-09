@@ -34,7 +34,7 @@ class SnapshotWriter:
     def _blur_except(img: np.ndarray, bbox: BBox) -> np.ndarray:
         """Floute toute l'image sauf la boîte plaque (laissée nette, lisible)."""
         h, w = img.shape[:2]
-        blurred = cv2.GaussianBlur(img, (31, 31), 0)
+        blurred: np.ndarray = cv2.GaussianBlur(img, (31, 31), 0)
         x1 = max(0, int(bbox.x1))
         y1 = max(0, int(bbox.y1))
         x2 = min(w, int(bbox.x2))

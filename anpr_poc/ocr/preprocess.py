@@ -16,7 +16,8 @@ def rectify(crop: np.ndarray, homography: np.ndarray | None) -> np.ndarray:
     if np.allclose(homography, np.eye(3)):
         return crop
     h, w = crop.shape[:2]
-    return cv2.warpPerspective(crop, homography, (w, h), flags=cv2.INTER_LINEAR)
+    warped: np.ndarray = cv2.warpPerspective(crop, homography, (w, h), flags=cv2.INTER_LINEAR)
+    return warped
 
 
 def euroband_strip(crop: np.ndarray, frac: float = 0.11) -> np.ndarray:

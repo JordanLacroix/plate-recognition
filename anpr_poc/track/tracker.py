@@ -51,4 +51,4 @@ class PlateTracker:
 
         cx = (bbox.x1 + bbox.x2) / 2
         cy = (bbox.y1 + bbox.y2) / 2
-        return cv2.pointPolygonTest(self._polygon, (cx, cy), False) >= 0
+        return bool(cv2.pointPolygonTest(self._polygon, (cx, cy), False) >= 0)
